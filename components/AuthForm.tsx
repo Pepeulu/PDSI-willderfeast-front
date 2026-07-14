@@ -76,17 +76,17 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
       </Link>
       <section className="auth-panel">
         <div className="auth-art">
-          <span className="eyebrow">ENTRE NA SELVA</span>
+          <span className="eyebrow">ENTRE NESSE NOVO MUNDO</span>
           <h1>
             {signup
               ? "SUA CAÇADA COMEÇA AGORA."
-              : "A FOGUEIRA AINDA ESTÁ ACESA."}
+              : "A CAÇADA AINDA CONTINUA."}
           </h1>
           <p>
             Reúna seu grupo, prepare suas ferramentas e escreva uma história
-            digna de ser contada ao redor da fogueira.
+            digna de ser contada ao redor de uma fogueira.
           </p>
-          <div className="tracks">✦ ᨒ ✦ ᨒ ✦</div>
+          <div className="tracks"></div>
         </div>
         <form noValidate onSubmit={submit}>
           <span className="eyebrow">
