@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import Header from '@/components/Header';
-import CharacterCard from '@/components/CharacterCard';
-import MonsterCard from '@/components/MonsterCard';
+import Link from "next/link";
+import Header from "@/components/Header";
+import CharacterCard from "@/components/CharacterCard";
+import MonsterCard from "@/components/MonsterCard";
 export default function Home() {
   return (
     <>
@@ -34,21 +34,14 @@ export default function Home() {
             <MonsterCard index={1} />
             <div className="bestiary-copy">
               <p>
-                Para ter acesso ao bestiário completo, seja redirecionado para a página clicando no
-                botão
+                Para ter acesso ao bestiário completo, seja redirecionado para a
+                página clicando no botão
               </p>
               <Link className="orange-button" href="/bestiario">
                 Clique Aqui
               </Link>
             </div>
           </div>
-        </section>
-        <section className="master-area">
-          <h2>Área do Mestre</h2>
-          <p>Espaço dedicado para o nosso mestre lindo e maravilhoso</p>
-          <Link className="orange-button" href="/login">
-            Boss Aqui
-          </Link>
         </section>
       </main>
     </>

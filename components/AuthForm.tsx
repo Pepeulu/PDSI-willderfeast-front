@@ -1,6 +1,5 @@
 "use client";
 
-import { AxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -19,8 +18,19 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
     event.preventDefault();
     setErro("");
 
+    if (
+      !email.trim() ||
+      !senha ||
+      (signup && (!nome.trim() || !confirmacaoSenha))
+    ) {
+      setErro(
+        signup ? "Dados de cadastro incompletos." : "Credenciais incompletas.",
+      );
+      return;
+    }
+
     if (signup && senha !== confirmacaoSenha) {
-      setErro("As senhas não coincidem.");
+      setErro("Dados de cadastro inválidos.");
       return;
     }
 
@@ -30,23 +40,30 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
         ? await register({ nome, email, senha })
         : await login({ email, senha });
 
-      localStorage.setItem("wilderfeast_token", resposta.access_token);
-      localStorage.setItem("wilderfeast_user", JSON.stringify(resposta.user));
-      router.push("/");
-      router.refresh();
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        const detail = error.response?.data?.detail;
-        setErro(
-          typeof detail === "string"
-            ? detail
-            : "Não foi possível autenticar. Tente novamente.",
-        );
-      } else {
-        setErro(
-          "Não foi possível conectar à API. Verifique se o backend está em execução.",
-        );
+      const sessionResponse = await fetch("/api/session", {
+        body: JSON.stringify({ token: resposta.access_token }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      if (!sessionResponse.ok) {
+        throw new Error("Não foi possível iniciar sua sessão.");
       }
+
+      localStorage.setItem("wilderfeast_user", JSON.stringify(resposta.user));
+      const nextPath = new URLSearchParams(window.location.search).get("next");
+      router.push(
+        nextPath?.startsWith("/") && !nextPath.startsWith("//")
+          ? nextPath
+          : "/",
+      );
+      router.refresh();
+    } catch {
+      setErro(
+        signup
+          ? "Não foi possível concluir o cadastro."
+          : "Credenciais inválidas.",
+      );
     } finally {
       setEnviando(false);
     }
@@ -71,7 +88,7 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
           </p>
           <div className="tracks">✦ ᨒ ✦ ᨒ ✦</div>
         </div>
-        <form onSubmit={submit}>
+        <form noValidate onSubmit={submit}>
           <span className="eyebrow">
             {signup ? "NOVO AVENTUREIRO" : "BEM-VINDO DE VOLTA"}
           </span>
@@ -136,12 +153,6 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
               : signup
                 ? "COMEÇAR AVENTURA"
                 : "ENTRAR NA CONTA"}
-          </button>
-          <div className="divider">
-            <span>OU</span>
-          </div>
-          <button className="social" type="button">
-            G&nbsp;&nbsp; CONTINUAR COM GOOGLE
           </button>
           <p className="switch">
             {signup ? "Já tem uma conta?" : "Ainda não tem conta?"}{" "}

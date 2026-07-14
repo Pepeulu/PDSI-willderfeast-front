@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 :root {
   --blue: #1217cc;
   --orange: #ffa13e;
@@ -47,6 +47,17 @@ select {
   font-size: 15px;
 }
 .topbar nav a:hover {
+  text-decoration: underline;
+}
+.logout-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: inherit;
+}
+.logout-button:hover {
   text-decoration: underline;
 }
 .figma-page {
@@ -255,7 +266,7 @@ select {
   border: 5px solid #111;
 }
 .poly-die:after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 25%;
   border: 2px solid #111;
@@ -335,7 +346,7 @@ select {
 }
 .sheet-divider:before,
 .sheet-divider:after {
-  content: '';
+  content: "";
   height: 4px;
   background: #111;
   flex: 1;
@@ -464,23 +475,6 @@ select {
   background: var(--orange);
   border: 0;
   margin-top: 8px;
-}
-.divider {
-  text-align: center;
-  border-top: 1px solid #ddd;
-  margin: 26px 0 18px;
-}
-.divider span {
-  position: relative;
-  top: -9px;
-  background: white;
-  padding: 0 10px;
-  font-size: 11px;
-}
-.social {
-  height: 48px;
-  background: #fff;
-  border: 1px solid #777;
 }
 .switch {
   text-align: center;
