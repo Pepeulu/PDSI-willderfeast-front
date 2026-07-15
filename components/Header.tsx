@@ -22,7 +22,6 @@ export default function Header() {
         />
       </Link>
       <nav>
-        <Link href="/dados">Dados</Link>
         <Link href="/fichas">Fichas</Link>
         <Link href="/bestiario">Bestiário</Link>
         <button className="logout-button" onClick={logout} type="button">
