@@ -10,7 +10,7 @@ export default function Home() {
         <section>
           <h1>Criar ficha</h1>
           <p>Crie aqui a ficha do seu personagem</p>
-          <Link className="orange-button" href="/cadastro">
+          <Link className="orange-button" href="">
             Criar
           </Link>
         </section>
