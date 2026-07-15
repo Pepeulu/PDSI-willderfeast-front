@@ -72,7 +72,7 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
   return (
     <main className="auth-page">
       <Link className="auth-brand" href="/">
-        WILDERFEAST
+        
       </Link>
       <section className="auth-panel">
         <div className="auth-art">
