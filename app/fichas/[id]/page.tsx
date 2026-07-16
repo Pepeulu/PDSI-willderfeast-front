@@ -1,6 +1,6 @@
-import Header from '@/components/Header';
+import Header from "@/components/Header";
 const lorem =
-  'Lorem ipsum bla bla bla arthur, lorem ipsum bla bla bla arthur, lorem ipsum bla bla bla arthur.';
+  "Lorem ipsum bla bla bla arthur, lorem ipsum bla bla bla arthur, lorem ipsum bla bla bla arthur.";
 function Divider({ title }: { title: string }) {
   return (
     <h2 className="sheet-divider">
@@ -57,7 +57,7 @@ export default async function Sheet() {
           </p>
         </div>
         <Divider title="História" />
-        {['Criação', 'Iniciação', 'Ambição', 'Conexão'].map((x) => (
+        {["Criação", "Iniciação", "Ambição", "Conexão"].map((x) => (
           <div className="history-row" key={x}>
             <b>{x}:</b>
             <p>
@@ -71,7 +71,7 @@ export default async function Sheet() {
         <div className="ability-columns">
           <div>
             <h3>Estilos</h3>
-            {['LIGEIRO', 'PODEROSO', 'PRECISO', 'SAGAZ'].map((x) => (
+            {["LIGEIRO", "PODEROSO", "PRECISO", "SAGAZ"].map((x) => (
               <span className="ability" key={x}>
                 {x}
                 <b>0</b>
@@ -80,7 +80,14 @@ export default async function Sheet() {
           </div>
           <div>
             <h3>Habilidades</h3>
-            {['AGARRAR', 'ATIRAR', 'ARMAZENAR', 'ATRAVESSAR', 'ASSEGURAR', 'CHAMAR'].map((x) => (
+            {[
+              "AGARRAR",
+              "ATIRAR",
+              "ARMAZENAR",
+              "ATRAVESSAR",
+              "ASSEGURAR",
+              "CHAMAR",
+            ].map((x) => (
               <span className="ability" key={x}>
                 {x}
                 <b>0</b>

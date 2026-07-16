@@ -1,6 +1,6 @@
-import Header from '@/components/Header';
-import CharacterCard from '@/components/CharacterCard';
-import Link from 'next/link';
+import Header from "@/components/Header";
+import CharacterCard from "@/components/CharacterCard";
+import Link from "next/link";
 export default function Fichas() {
   return (
     <>

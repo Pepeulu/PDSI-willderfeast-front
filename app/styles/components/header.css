@@ -1,0 +1,66 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 152px;
+  padding: 0 max(48px, calc((100vw - 1160px) / 2));
+  background: var(--blue);
+  color: #fff;
+}
+
+.brand img {
+  display: block;
+  width: 330px;
+  height: auto;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 42px;
+  margin-left: auto;
+  font-size: 15px;
+}
+
+.topbar nav a:hover,
+.logout-button:hover {
+  text-decoration: underline;
+}
+
+.logout-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+@media (max-width: 800px) {
+  .topbar {
+    height: 105px;
+    padding: 0 24px;
+  }
+
+  .brand img {
+    width: 220px;
+  }
+
+  .topbar nav {
+    gap: 15px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 520px) {
+  .topbar nav a:nth-child(3),
+  .topbar nav a:nth-child(4) {
+    display: none;
+  }
+
+  .topbar nav {
+    margin-left: auto;
+  }
+
+  .brand img {
+    width: 180px;
+  }
+}

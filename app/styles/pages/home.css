@@ -1,0 +1,38 @@
+.home-characters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 36px;
+}
+
+.home-bestiary {
+  display: grid;
+  grid-template-columns: 280px 280px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.bestiary-copy {
+  padding: 25px 15px;
+}
+
+.bestiary-copy p {
+  max-width: 250px;
+  font-size: 14px;
+}
+
+@media (max-width: 800px) {
+  .home-bestiary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bestiary-copy {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .home-bestiary {
+    grid-template-columns: 1fr;
+  }
+}

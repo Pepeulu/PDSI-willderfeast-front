@@ -1,0 +1,94 @@
+.dice-figma {
+  width: min(1060px, calc(100% - 64px));
+}
+
+.dice-figma section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 570px;
+  margin: 0;
+  padding: 65px 0;
+}
+
+.dice-figma section h2 {
+  align-self: flex-start;
+  font-size: 24px;
+}
+
+.poly-die {
+  position: relative;
+  display: grid;
+  width: 190px;
+  height: 190px;
+  margin: 45px auto 15px;
+  border: 5px solid #111;
+  clip-path: polygon(50% 0, 93% 27%, 88% 80%, 50% 100%, 12% 80%, 7% 27%);
+  place-items: center;
+}
+
+.poly-die::after {
+  position: absolute;
+  inset: 25%;
+  border: 2px solid #111;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.poly-die span {
+  z-index: 1;
+  font-size: 42px;
+}
+
+.poly-die.animal {
+  clip-path: polygon(50% 0, 92% 15%, 100% 58%, 72% 95%, 27% 95%, 0 58%, 8% 15%);
+}
+
+.style-dice {
+  display: flex;
+  gap: 28px;
+  margin: 75px 0 55px;
+}
+
+.cube {
+  display: grid;
+  width: 112px;
+  height: 112px;
+  border: 5px solid #111;
+  border-radius: 12px;
+  background: #ffc21b;
+  box-shadow: 10px -10px 0 #eaa500;
+  font-size: 32px;
+  place-items: center;
+}
+
+.style-controls {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.style-controls select {
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--orange);
+}
+
+@media (max-width: 520px) {
+  .style-dice {
+    gap: 8px;
+  }
+
+  .cube {
+    width: 54px;
+    height: 54px;
+    border-width: 3px;
+    box-shadow: 5px -5px 0 #eaa500;
+  }
+
+  .style-controls {
+    gap: 10px;
+  }
+}

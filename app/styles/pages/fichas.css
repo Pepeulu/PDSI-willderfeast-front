@@ -1,0 +1,16 @@
+.fichas-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 36px;
+}
+
+.fichas-grid .blue-tile {
+  margin-left: 20px;
+}
+
+@media (max-width: 520px) {
+  .fichas-grid .blue-tile {
+    margin-left: 0;
+  }
+}

@@ -1,5 +1,5 @@
-import Header from '@/components/Header';
-import MonsterCard from '@/components/MonsterCard';
+import Header from "@/components/Header";
+import MonsterCard from "@/components/MonsterCard";
 export default function Bestiario() {
   return (
     <>

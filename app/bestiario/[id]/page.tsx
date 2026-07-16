@@ -1,6 +1,6 @@
-import Header from '@/components/Header';
+import Header from "@/components/Header";
 const text =
-  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. A besta se move pelo território e protege seu habitat com ferocidade.';
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. A besta se move pelo território e protege seu habitat com ferocidade.";
 function Divider({ title }: { title: string }) {
   return (
     <h2 className="sheet-divider">
@@ -31,11 +31,11 @@ export default function BeastSheet() {
           </div>
         </section>
         <Divider title="Partes" />
-        {['Escamas', 'Garras', 'Cauda'].map((x) => (
+        {["Escamas", "Garras", "Cauda"].map((x) => (
           <section className="beast-part" key={x}>
             <p>
-              <b>{x.toUpperCase()}.</b> Alcance: 1 <em>(AGARRAR PODEROSO)</em> | Passiva: se você
-              conseguir atacar ela fica <strong>PRESA</strong>
+              <b>{x.toUpperCase()}.</b> Alcance: 1 <em>(AGARRAR PODEROSO)</em> |
+              Passiva: se você conseguir atacar ela fica <strong>PRESA</strong>
             </p>
             <p>• Se quebrado: Alcance 1 (AGARRAR PODEROSO)</p>
           </section>
@@ -46,7 +46,7 @@ export default function BeastSheet() {
           <b>20</b>
         </div>
         <Divider title="Comportamento" />
-        {['Comportamento', 'Dieta', 'Habitat'].map((x) => (
+        {["Comportamento", "Dieta", "Habitat"].map((x) => (
           <div className="history-row" key={x}>
             <b>{x}:</b>
             <p>

@@ -1,0 +1,94 @@
+.figma-character {
+  position: relative;
+  width: 340px;
+  min-height: 365px;
+  padding: 20px;
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.character-top {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 18px;
+  min-height: 165px;
+}
+
+.character-top img {
+  width: 128px;
+  height: 165px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.character-top > div {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.character-top b {
+  margin-bottom: 10px;
+  font-size: 17px;
+}
+
+.character-top span {
+  margin: 5px 0 3px;
+}
+
+.bar {
+  display: block;
+  height: 28px;
+  border-radius: 2px;
+}
+
+.bar.red {
+  background: #f00;
+}
+
+.bar.green {
+  background: var(--green);
+}
+
+.character-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.character-stats span,
+.character-meta b {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.character-stats small,
+.character-meta small {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.character-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 12px;
+}
+
+.figma-character > a {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  padding: 11px 18px;
+  border-radius: 3px;
+  background: #164777;
+  color: #fff;
+  font-size: 13px;
+}
+
+@media (max-width: 520px) {
+  .figma-character {
+    width: 100%;
+  }
+}

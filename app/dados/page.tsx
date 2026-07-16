@@ -1,6 +1,6 @@
-'use client';
-import { useState } from 'react';
-import Header from '@/components/Header';
+"use client";
+import { useState } from "react";
+import Header from "@/components/Header";
 function PolyDie({
   value,
   color,
@@ -11,7 +11,10 @@ function PolyDie({
   animal?: boolean;
 }) {
   return (
-    <div className={`poly-die ${animal ? 'animal' : ''}`} style={{ background: color }}>
+    <div
+      className={`poly-die ${animal ? "animal" : ""}`}
+      style={{ background: color }}
+    >
       <span>{value}</span>
     </div>
   );
@@ -20,7 +23,8 @@ export default function Dados() {
   const [human, setHuman] = useState(1);
   const [animal, setAnimal] = useState(1);
   const [style, setStyle] = useState([1, 1, 1, 1, 1]);
-  const roll = (max: number, set: (n: number) => void) => set(1 + Math.floor(Math.random() * max));
+  const roll = (max: number, set: (n: number) => void) =>
+    set(1 + Math.floor(Math.random() * max));
   return (
     <>
       <Header />
@@ -56,7 +60,9 @@ export default function Dados() {
             </select>
             <button
               className="orange-button"
-              onClick={() => setStyle(style.map(() => 1 + Math.floor(Math.random() * 6)))}
+              onClick={() =>
+                setStyle(style.map(() => 1 + Math.floor(Math.random() * 6)))
+              }
             >
               Rolar
             </button>

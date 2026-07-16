@@ -1,0 +1,170 @@
+.long-sheet {
+  width: min(1160px, calc(100% - 64px));
+  margin: auto;
+  padding: 80px 0 160px;
+}
+
+.sheet-profile {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.sheet-profile > img {
+  width: 290px;
+  height: 230px;
+  object-fit: cover;
+  object-position: left center;
+}
+
+.sheet-profile p {
+  margin: 0 0 11px;
+}
+
+.conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+}
+
+.conditions span {
+  padding: 7px 22px;
+  border-radius: 20px;
+  background: var(--red);
+  color: white;
+  font-size: 13px;
+}
+
+.sheet-divider {
+  display: flex;
+  align-items: center;
+  margin: 70px 0 40px;
+  font-size: 28px;
+  text-align: center;
+}
+
+.sheet-divider::before,
+.sheet-divider::after {
+  flex: 1;
+  height: 4px;
+  background: #111;
+  content: "";
+}
+
+.sheet-divider span {
+  padding: 0 25px;
+}
+
+.sheet-center {
+  font-size: 25px;
+  text-align: center;
+}
+
+.sheet-text {
+  padding: 20px 110px;
+  line-height: 1.55;
+}
+
+.sheet-text b {
+  display: block;
+  margin-top: 35px;
+}
+
+.sheet-text mark {
+  display: inline-block;
+  padding: 4px 45px;
+  background: #27ba47;
+  color: #fff;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 15px;
+  padding: 10px 80px;
+  line-height: 1.55;
+}
+
+.history-row p {
+  margin: 0;
+}
+
+.ability-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 55px;
+  padding: 0 80px;
+}
+
+.ability {
+  display: inline-flex;
+  justify-content: space-between;
+  width: 46%;
+  margin: 5px 2%;
+  padding: 7px 10px;
+  border: 2px solid #111;
+  font-size: 12px;
+}
+
+.ability b {
+  padding-left: 12px;
+  border-left: 2px solid #111;
+}
+
+.beast-part {
+  padding: 12px 20px;
+  border-bottom: 2px dashed #222;
+}
+
+.beast-part em {
+  color: #b89355;
+  font-style: normal;
+}
+
+.beast-part strong {
+  color: #e60f35;
+}
+
+.durability {
+  display: flex;
+  gap: 4px;
+  margin: 25px 20px;
+}
+
+.durability b {
+  padding: 10px;
+  background: #111;
+  color: #fff;
+  font-size: 27px;
+}
+
+@media (max-width: 800px) {
+  .long-sheet {
+    width: calc(100% - 36px);
+  }
+
+  .sheet-text,
+  .history-row,
+  .ability-columns {
+    padding-inline: 0;
+  }
+
+  .sheet-profile {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .sheet-profile > img {
+    width: 100%;
+  }
+
+  .sheet-text {
+    font-size: 14px;
+  }
+
+  .history-row,
+  .ability-columns {
+    grid-template-columns: 1fr;
+  }
+}

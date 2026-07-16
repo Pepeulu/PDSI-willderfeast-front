@@ -71,27 +71,36 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
 
   return (
     <main className="auth-page">
+
       <Link className="auth-brand" href="/">
         
       </Link>
+
       <section className="auth-panel">
+
         <div className="auth-art">
           <span className="eyebrow">ENTRE NESSE NOVO MUNDO</span>
+
           <h1>
-            {signup
-              ? "SUA CAÇADA COMEÇA AGORA."
-              : "A CAÇADA AINDA CONTINUA."}
+            {signup ? "SUA CAÇADA COMEÇA AGORA." : "A CAÇADA AINDA CONTINUA."}
           </h1>
+
           <p>
             Reúna seu grupo, prepare suas ferramentas e escreva uma história
             digna de ser contada ao redor de uma fogueira.
           </p>
+
           <div className="tracks"></div>
+
         </div>
+
+
         <form noValidate onSubmit={submit}>
+
           <span className="eyebrow">
             {signup ? "NOVO AVENTUREIRO" : "BEM-VINDO DE VOLTA"}
           </span>
+
           <h2>{signup ? "CRIAR CONTA" : "ENTRAR"}</h2>
           {signup && (
             <label>
@@ -105,6 +114,7 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
               />
             </label>
           )}
+
           <label>
             E-MAIL
             <input
@@ -116,6 +126,7 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
               value={email}
             />
           </label>
+
           <label>
             SENHA
             <input
@@ -127,7 +138,9 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
               type="password"
               value={senha}
             />
+
           </label>
+
           {signup && (
             <label>
               CONFIRMAR SENHA
@@ -142,11 +155,13 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
               />
             </label>
           )}
+
           {erro && (
             <p className="auth-error" role="alert">
               {erro}
             </p>
           )}
+
           <button className="btn primary" disabled={enviando} type="submit">
             {enviando
               ? "AGUARDE..."
@@ -154,12 +169,14 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
                 ? "COMEÇAR AVENTURA"
                 : "ENTRAR NA CONTA"}
           </button>
+
           <p className="switch">
             {signup ? "Já tem uma conta?" : "Ainda não tem conta?"}{" "}
             <Link href={signup ? "/login" : "/cadastro"}>
               {signup ? "Entrar" : "Cadastre-se"}
             </Link>
           </p>
+          
         </form>
       </section>
     </main>

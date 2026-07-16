@@ -12,6 +12,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // porque essa merda ta quebrando!!!!!!!!!!!!!!!!!!!
+
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", `${nextUrl.pathname}${nextUrl.search}`);
   return NextResponse.redirect(loginUrl);

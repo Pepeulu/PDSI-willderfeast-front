@@ -1,0 +1,22 @@
+.figma-monster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 46px 32px;
+  margin-top: 42px;
+}
+
+.figma-monster-grid .monster-card img {
+  height: 285px;
+}
+
+@media (max-width: 800px) {
+  .figma-monster-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .figma-monster-grid {
+    grid-template-columns: 1fr;
+  }
+}

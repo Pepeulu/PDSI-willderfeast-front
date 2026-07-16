@@ -1,0 +1,41 @@
+.monster-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.monster-card img,
+.monster-image {
+  width: 100%;
+  height: 245px;
+  border-radius: 2px;
+}
+
+.monster-card img {
+  object-fit: cover;
+}
+
+.monster-image {
+  background-image: url("/assets/monsters.jpg");
+  background-repeat: no-repeat;
+  background-size: 200% 200%;
+}
+
+.monster-card b {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.monster-card small {
+  margin-top: 5px;
+  color: #777;
+}
+
+.figma-monster-grid .monster-image {
+  height: 285px;
+}
+
+@media (max-width: 520px) {
+  .monster-card img {
+    height: 260px;
+  }
+}

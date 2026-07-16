@@ -1,0 +1,31 @@
+.orange-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 115px;
+  margin-top: 12px;
+  padding: 14px 36px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--orange);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.blue-tile {
+  display: grid;
+  width: 145px;
+  height: 165px;
+  border-radius: 5px;
+  background: #174878;
+  color: #fff;
+  place-items: center;
+  text-align: center;
+  font-size: 14px;
+}
+
+.eyebrow {
+  color: #555;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
