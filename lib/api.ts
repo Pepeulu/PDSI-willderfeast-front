@@ -35,7 +35,7 @@ export async function login(payload: LoginPayload) {
 }
 
 export async function register(payload: RegisterPayload) {
-  const { data } = await api.post<AuthResponse>("/auth/register", payload);
+  const { data } = await api.post<AuthResponse>("/auth/registro", payload);
   return data;
 }
 
