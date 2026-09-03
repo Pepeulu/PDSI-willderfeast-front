@@ -30,8 +30,7 @@ const api = axios.create({
 });
 
 export async function login(payload: LoginPayload) {
-  // A API usa OAuth2PasswordRequestForm, que recebe dados de formulário
-  // nos campos username e password — não JSON com email e senha.
+
   const body = new URLSearchParams({
     password: payload.senha,
     username: payload.email,
