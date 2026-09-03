@@ -39,8 +39,6 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
       let usuario: AuthUser;
 
       if (signup) {
-        // O cadastro retorna somente o usuário. Faça login em seguida para
-        // obter o token que será gravado na sessão do Next.
         usuario = await register({ nome, email, senha });
       } else {
         usuario = { email, id: 0 };
