@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { login, register } from "@/lib/api";
+import { AuthUser, login, register } from "@/lib/api";
 
 export default function AuthForm({ signup = false }: { signup?: boolean }) {
   const router = useRouter();
@@ -36,9 +36,18 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
 
     try {
       setEnviando(true);
-      const resposta = signup
-        ? await register({ nome, email, senha })
-        : await login({ email, senha });
+      let usuario: AuthUser;
+
+      if (signup) {
+        // O cadastro retorna somente o usuário. Faça login em seguida para
+        // obter o token que será gravado na sessão do Next.
+        usuario = await register({ nome, email, senha });
+      } else {
+        usuario = { email, id: 0 };
+      }
+
+      const resposta = await login({ email, senha });
+      usuario.id = resposta.usuario_id;
 
       const sessionResponse = await fetch("/api/session", {
         body: JSON.stringify({ token: resposta.access_token }),
@@ -50,7 +59,7 @@ export default function AuthForm({ signup = false }: { signup?: boolean }) {
         throw new Error("Não foi possível iniciar sua sessão.");
       }
 
-      localStorage.setItem("wilderfeast_user", JSON.stringify(resposta.user));
+      localStorage.setItem("wilderfeast_user", JSON.stringify(usuario));
       const nextPath = new URLSearchParams(window.location.search).get("next");
       router.push(
         nextPath?.startsWith("/") && !nextPath.startsWith("//")

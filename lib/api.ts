@@ -2,14 +2,14 @@ import axios from "axios";
 
 export interface AuthUser {
   id: number;
-  nome: string;
+  nome?: string;
   email: string;
 }
 
-export interface AuthResponse {
+export interface LoginResponse {
   access_token: string;
   token_type: "bearer";
-  user: AuthUser;
+  usuario_id: number;
 }
 
 export interface LoginPayload {
@@ -30,12 +30,20 @@ const api = axios.create({
 });
 
 export async function login(payload: LoginPayload) {
-  const { data } = await api.post<AuthResponse>("/auth/login", payload);
+  // A API usa OAuth2PasswordRequestForm, que recebe dados de formulário
+  // nos campos username e password — não JSON com email e senha.
+  const body = new URLSearchParams({
+    password: payload.senha,
+    username: payload.email,
+  });
+  const { data } = await api.post<LoginResponse>("/auth/login", body, {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
   return data;
 }
 
 export async function register(payload: RegisterPayload) {
-  const { data } = await api.post<AuthResponse>("/auth/registro", payload);
+  const { data } = await api.post<AuthUser>("/auth/registro", payload);
   return data;
 }
 
