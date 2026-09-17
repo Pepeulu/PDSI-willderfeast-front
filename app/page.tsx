@@ -204,41 +204,6 @@ export default function Home() {
     router.refresh();
   }
 
-  const fallbackCards: MonsterCardProps[] = [
-    {
-      harvest: "Glândula de Muco",
-      harvestIcon: icons.harvestOne,
-      href: "/bestiario/1",
-      image: images.toad,
-      imageClassName: "toad-image",
-      name: "SAPO ENGOLIDOR",
-      tags: [
-        { icon: icons.swamp, label: "Pântano" },
-        { icon: icons.edible, label: "Comestível (Duro)" },
-      ],
-      threat: "Ameaça: Baixa",
-      threatLevel: "low",
-      weakness: "Frio",
-      weaknessIcon: icons.cold,
-    },
-    {
-      harvest: "Bolsa de Fogo",
-      harvestIcon: icons.harvestTwo,
-      href: "/bestiario/2",
-      image: images.ember,
-      imageClassName: "ember-image",
-      name: "TECELÃ DE BRASAS",
-      tags: [
-        { icon: icons.volcanic, label: "Vulcânico" },
-        { icon: icons.spicy, label: "Iguaria Picante" },
-      ],
-      threat: "Ameaça: Alta",
-      threatLevel: "high",
-      weakness: "Água/Impacto",
-      weaknessIcon: icons.water,
-    },
-  ];
-
   const apiCards: MonsterCardProps[] = isCharacterSheets
     ? ferais.map((feral, index) => ({
         harvest: feral.especialidade ?? "Não definida",
@@ -292,15 +257,14 @@ export default function Home() {
         weaknessLabel: "Alvos",
       }));
 
-  const displayedCards = apiCards.length ? apiCards : fallbackCards;
   const apiStatus = loadingApi
     ? "Carregando dados da API..."
     : apiError
-      ? `${apiError} Exibindo os exemplos do Figma.`
+      ? apiError
       : apiCards.length === 0
         ? isCharacterSheets
-          ? "Nenhuma ficha cadastrada. Exibindo os exemplos do Figma."
-          : "Nenhum monstro cadastrado na API. Exibindo os exemplos do Figma."
+          ? "Nenhuma ficha cadastrada."
+          : "Nenhum monstro cadastrado na API."
         : "";
 
   return (
@@ -374,7 +338,7 @@ export default function Home() {
           )}
 
           <div className="monster-grid">
-            {displayedCards.map((card) => (
+            {apiCards.map((card) => (
               <MonsterCard key={card.href} {...card} />
             ))}
           </div>
