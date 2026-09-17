@@ -1,16 +1,74 @@
-.fichas-grid {
+.character-sheets-content {
+  min-height: 100vh;
+}
+
+.character-sheets-section .home-section-heading {
+  height: 79.8px;
+  padding-bottom: 0;
+}
+
+.character-sheets-section .home-section-heading::after {
+  bottom: 0;
+}
+
+.character-create-button {
   display: flex;
-  flex-wrap: wrap;
+  width: min(100%, 448px);
+  min-height: 64px;
   align-items: center;
-  gap: 36px;
+  justify-content: center;
+  margin-top: 6px;
+  border-radius: 12px;
+  background: #ffb866;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 10%),
+    0 4px 6px -4px rgb(0 0 0 / 10%);
+  color: #482900;
+  font-family: "Archivo Narrow", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 3.2px;
+  line-height: 38.4px;
 }
 
-.fichas-grid .blue-tile {
-  margin-left: 20px;
+.character-sheets-section .monster-grid {
+  height: auto;
+  margin-top: 48px;
+  overflow: visible;
 }
 
-@media (max-width: 520px) {
-  .fichas-grid .blue-tile {
+.character-sheets-dashboard .home-navigation > a:first-child {
+  min-height: 56px;
+  margin: 1.4px 14px 0;
+}
+
+.character-sheets-dashboard .home-navigation > a:first-child img {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.character-sheets-dashboard .home-navigation a.active {
+  min-height: 44px;
+  margin: 0;
+}
+
+.character-sheets-dashboard .home-navigation a.active img {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+}
+
+@media (max-width: 850px) {
+  .character-sheets-dashboard .home-navigation > a:first-child {
+    margin-right: 0;
     margin-left: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .character-create-button {
+    min-height: 58px;
+    font-size: 28px;
   }
 }

@@ -5,6 +5,11 @@
   --red: #f10d18;
   --green: #1dc765;
   --dark: #101010;
+  --hub-night: #091423;
+  --hub-panel: #162030;
+  --hub-card: #202a3b;
+  --hub-blue: #adc7f7;
+  --hub-orange: #ffb866;
 }
 
 * {
