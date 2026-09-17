@@ -15,6 +15,9 @@ import { useEffect, useState } from "react";
 const API_ASSET_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "https://poas-wilderfeast.onrender.com";
 
+const profileAvatar =
+  "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Qiyana_0.jpg";
+
 function resolveApiImage(imageUrl: string | null, fallback: string) {
   if (!imageUrl) {
     return fallback;
@@ -276,10 +279,9 @@ export default function Home() {
       <aside className="home-sidebar">
         <div className="home-user">
           <span className="home-avatar">
-            <img src={images.avatar} alt="Avatar do Feral" />
+            <img src={profileAvatar} alt="Qiyana" />
           </span>
           <strong>{userName}</strong>
-          <small>Patente: Caçador Experiente</small>
         </div>
 
         <nav className="home-navigation" aria-label="Navegação principal">
