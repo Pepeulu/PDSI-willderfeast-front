@@ -310,13 +310,13 @@ export default function Home() {
       }`}
     >
       <aside className="home-sidebar">
-        <Link className="home-user" href="/dados">
+        <div className="home-user">
           <span className="home-avatar">
             <img src={images.avatar} alt="Avatar do Feral" />
           </span>
           <strong>{userName}</strong>
           <small>Patente: Caçador Experiente</small>
-        </Link>
+        </div>
 
         <nav className="home-navigation" aria-label="Navegação principal">
           <Link className={isCharacterSheets ? "" : "active"} href="/">
