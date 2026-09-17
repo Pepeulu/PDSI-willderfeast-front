@@ -14,8 +14,10 @@ export interface LoginPayload {
   senha: string;
 }
 
-export interface RegisterPayload extends LoginPayload {
+export interface RegisterPayload {
+  email: string;
   nome: string;
+  senha: string;
 }
 
 export interface Feral {

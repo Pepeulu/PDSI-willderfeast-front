@@ -9,8 +9,10 @@ type LoginPayload = {
   senha: string;
 };
 
-type RegisterPayload = LoginPayload & {
+type RegisterPayload = {
+  email: string;
   nome: string;
+  senha: string;
 };
 
 type SessionBody =

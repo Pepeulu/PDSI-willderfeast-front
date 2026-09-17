@@ -29,6 +29,28 @@
   font-weight: 700;
   letter-spacing: 3.2px;
   line-height: 38.4px;
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease,
+    color 200ms ease,
+    letter-spacing 200ms ease,
+    transform 200ms ease;
+}
+
+.character-create-button:hover,
+.character-create-button:focus-visible {
+  background: #ffc57f;
+  box-shadow:
+    0 16px 26px -8px rgb(0 0 0 / 35%),
+    0 0 20px rgb(255 184 102 / 20%);
+  color: #2b1700;
+  letter-spacing: 3.8px;
+  transform: translateY(-3px);
+}
+
+.character-create-button:active {
+  box-shadow: 0 7px 12px -5px rgb(0 0 0 / 30%);
+  transform: translateY(-1px);
 }
 
 .character-sheets-section .monster-grid {
@@ -70,5 +92,18 @@
   .character-create-button {
     min-height: 58px;
     font-size: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-create-button {
+    transition: none;
+  }
+
+  .character-create-button:hover,
+  .character-create-button:focus-visible,
+  .character-create-button:active {
+    letter-spacing: 3.2px;
+    transform: none;
   }
 }
