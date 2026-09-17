@@ -15,9 +15,28 @@ type RegisterPayload = {
   senha: string;
 };
 
+type CreateFeralPayload = {
+  nome: string;
+  titulo: string | null;
+  especialidade: string | null;
+  imagem_url: string | null;
+  vigor_max: number;
+  vigor_atual: number;
+  voce_e: string | null;
+  tenta_ser: string | null;
+  feras_familiares: string | null;
+  prato_tipico: string | null;
+  tempero_tipico: string | null;
+  infancia_criacao: string | null;
+  iniciacao_como_feral: string | null;
+  ambicao: string | null;
+  conexao: string | null;
+};
+
 type SessionBody =
   | { action: "login"; payload: LoginPayload }
   | { action: "register"; payload: RegisterPayload }
+  | { action: "create-feral"; payload: CreateFeralPayload }
   | { token: string };
 
 async function readApiResponse(response: Response) {
@@ -93,6 +112,32 @@ export async function POST(request: Request) {
       token_type: loginData.token_type,
       usuario_id: loginData.usuario_id,
     });
+  }
+
+  if ("action" in body && body.action === "create-feral") {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("wilderfeast_token")?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
+    }
+
+    const response = await fetch(`${API_URL}/feral/`, {
+      body: JSON.stringify(body.payload),
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    const result = await readApiResponse(response);
+
+    if (result.error) {
+      return NextResponse.json({ error: result.error }, { status: response.status });
+    }
+
+    return NextResponse.json(result.data, { status: response.status });
   }
 
   if ("token" in body && body.token) {

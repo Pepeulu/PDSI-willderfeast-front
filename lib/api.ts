@@ -40,6 +40,24 @@ export interface Feral {
   conexao: string | null;
 }
 
+export interface CreateFeralPayload {
+  nome: string;
+  titulo: string | null;
+  especialidade: string | null;
+  imagem_url: string | null;
+  vigor_max: number;
+  vigor_atual: number;
+  voce_e: string | null;
+  tenta_ser: string | null;
+  feras_familiares: string | null;
+  prato_tipico: string | null;
+  tempero_tipico: string | null;
+  infancia_criacao: string | null;
+  iniciacao_como_feral: string | null;
+  ambicao: string | null;
+  conexao: string | null;
+}
+
 export interface Monstro {
   id: number;
   nome: string;
@@ -111,6 +129,13 @@ export async function register(payload: RegisterPayload) {
 
 export async function getMyFerais() {
   return request<Feral[]>("/api/session?resource=ferais");
+}
+
+export async function createFeral(payload: CreateFeralPayload) {
+  return request<Feral>("/api/session", {
+    body: JSON.stringify({ action: "create-feral", payload }),
+    method: "POST",
+  });
 }
 
 export async function getMonstros() {

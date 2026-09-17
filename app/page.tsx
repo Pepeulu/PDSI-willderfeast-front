@@ -328,7 +328,7 @@ export default function Home() {
           }`}
         >
           <div className="home-section-heading">
-            <h1>Fichas</h1>
+            <h1>{isCharacterSheets ? "Fichas" : "Bestiário"}</h1>
           </div>
 
           {isCharacterSheets && (
