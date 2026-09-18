@@ -76,7 +76,6 @@ function MonsterCard({
   harvest,
   harvestLabel = "Coleta",
   harvestIcon,
-  href,
   image,
   imageClassName = "",
   name,
@@ -88,7 +87,7 @@ function MonsterCard({
   weaknessIcon,
 }: MonsterCardProps) {
   return (
-    <Link className="home-monster-card" href={href}>
+    <article className="home-monster-card">
       <header>
         <h3>{name}</h3>
         <span className={`threat threat-${threatLevel}`}>{threat}</span>
@@ -125,7 +124,29 @@ function MonsterCard({
           </div>
         </div>
       </div>
-    </Link>
+    </article>
+  );
+}
+
+function MonsterCardSkeleton() {
+  return (
+    <article className="monster-card-skeleton" aria-hidden="true">
+      <div className="skeleton-card-header">
+        <span />
+        <i />
+      </div>
+      <div className="skeleton-card-image" />
+      <div className="skeleton-card-details">
+        <div className="skeleton-card-tags">
+          <span />
+          <span />
+        </div>
+        <div className="skeleton-card-facts">
+          <span />
+          <span />
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -137,7 +158,15 @@ export default function Home() {
   const [monstros, setMonstros] = useState<Monstro[]>([]);
   const [apiError, setApiError] = useState("");
   const [loadingApi, setLoadingApi] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [userName, setUserName] = useState("NOME DO FERAL");
+
+  useEffect(() => {
+    setIsSidebarCollapsed(
+      localStorage.getItem("wilderfeast_sidebar_collapsed") === "true",
+    );
+  }, []);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("wilderfeast_user");
@@ -207,6 +236,14 @@ export default function Home() {
     router.refresh();
   }
 
+  function toggleSidebar() {
+    setIsSidebarCollapsed((current) => {
+      const next = !current;
+      localStorage.setItem("wilderfeast_sidebar_collapsed", String(next));
+      return next;
+    });
+  }
+
   const apiCards: MonsterCardProps[] = isCharacterSheets
     ? ferais.map((feral, index) => ({
         harvest: feral.especialidade ?? "Não definida",
@@ -260,6 +297,21 @@ export default function Home() {
         weaknessLabel: "Alvos",
       }));
 
+  const normalizedSearch = searchQuery.trim().toLocaleLowerCase("pt-BR");
+  const visibleCards =
+    isCharacterSheets && normalizedSearch
+      ? apiCards.filter((card) =>
+          [
+            card.name,
+            card.threat,
+            card.harvest,
+            card.weakness,
+            ...card.tags.map((tag) => tag.label),
+          ].some((value) =>
+            value.toLocaleLowerCase("pt-BR").includes(normalizedSearch),
+          ),
+        )
+      : apiCards;
   const apiStatus = loadingApi
     ? "Carregando dados da API..."
     : apiError
@@ -268,15 +320,27 @@ export default function Home() {
         ? isCharacterSheets
           ? "Nenhuma ficha cadastrada."
           : "Nenhum monstro cadastrado na API."
+        : isCharacterSheets && visibleCards.length === 0
+          ? `Nenhuma ficha encontrada para “${searchQuery.trim()}”.`
         : "";
 
   return (
     <div
       className={`home-dashboard${
         isCharacterSheets ? " character-sheets-dashboard" : ""
-      }`}
+      }${isSidebarCollapsed ? " sidebar-collapsed" : ""}`}
     >
       <aside className="home-sidebar">
+        <button
+          aria-expanded={!isSidebarCollapsed}
+          aria-label={isSidebarCollapsed ? "Expandir menu" : "Minimizar menu"}
+          className="sidebar-toggle"
+          onClick={toggleSidebar}
+          type="button"
+        >
+          <span aria-hidden="true">{isSidebarCollapsed ? "›" : "‹"}</span>
+        </button>
+
         <div className="home-user">
           <span className="home-avatar">
             <img src={profileAvatar} alt="Qiyana" />
@@ -285,34 +349,59 @@ export default function Home() {
         </div>
 
         <nav className="home-navigation" aria-label="Navegação principal">
-          <Link className={isCharacterSheets ? "" : "active"} href="/">
+          <Link
+            aria-current={isCharacterSheets ? undefined : "page"}
+            className={isCharacterSheets ? "" : "active"}
+            data-label="Início"
+            href="/"
+          >
             <img src={icons.home} alt="" />
             <span>Início</span>
           </Link>
-          <Link className={isCharacterSheets ? "active" : ""} href="/fichas">
+          <Link
+            aria-current={isCharacterSheets ? "page" : undefined}
+            className={isCharacterSheets ? "active" : ""}
+            data-label="Fichas de Personagem"
+            href="/fichas"
+          >
             <img src={icons.character} alt="" />
             <span>Fichas de Personagem</span>
           </Link>
-          <Link href={isCharacterSheets ? "/#utensils" : "#utensils"}>
+          <Link
+            data-label="Utensílios"
+            href={isCharacterSheets ? "/#utensils" : "#utensils"}
+          >
             <img src={icons.utensils} alt="" />
             <span>Utensílios</span>
           </Link>
-          <Link href="/bestiario">
+          <Link data-label="Bestiário" href="/">
             <img src={icons.bestiary} alt="" />
             <span>Bestiário</span>
           </Link>
-          <Link href="/dados">
+          <button
+            aria-disabled="true"
+            className="sidebar-static-item"
+            data-label="Rolagem de Dados — em breve"
+            tabIndex={-1}
+            type="button"
+          >
             <img src={icons.dice} alt="" />
             <span>Rolagem de Dados</span>
-          </Link>
+          </button>
         </nav>
 
         <div className="home-sidebar-actions">
-          <Link href="/dados">
+          <button
+            aria-disabled="true"
+            className="sidebar-static-item"
+            data-label="Perfil — em breve"
+            tabIndex={-1}
+            type="button"
+          >
             <img src={icons.profile} alt="" />
             <span>Perfil</span>
-          </Link>
-          <button onClick={logout} type="button">
+          </button>
+          <button data-label="Sair" onClick={logout} type="button">
             <img src={icons.logout} alt="" />
             <span>Sair</span>
           </button>
@@ -334,15 +423,33 @@ export default function Home() {
           </div>
 
           {isCharacterSheets && (
-            <Link className="character-create-button" href="/fichas/novo">
-              CRIAR
-            </Link>
+            <div className="character-toolbar">
+              <label className="character-search">
+                <span aria-hidden="true">⌕</span>
+                <input
+                  aria-label="Buscar fichas"
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Buscar por nome, título ou especialidade..."
+                  type="search"
+                  value={searchQuery}
+                />
+              </label>
+              <Link className="character-create-button" href="/fichas/novo">
+                CRIAR
+              </Link>
+            </div>
           )}
 
-          <div className="monster-grid">
-            {apiCards.map((card) => (
-              <MonsterCard key={card.href} {...card} />
-            ))}
+          <div
+            className={`monster-grid${
+              !loadingApi && visibleCards.length === 0 ? " empty" : ""
+            }`}
+          >
+            {loadingApi
+              ? [0, 1].map((item) => <MonsterCardSkeleton key={item} />)
+              : visibleCards.map((card) => (
+                  <MonsterCard key={card.href} {...card} />
+                ))}
           </div>
 
           {apiStatus && (
