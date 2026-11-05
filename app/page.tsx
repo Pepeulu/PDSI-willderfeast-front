@@ -369,38 +369,26 @@ export default function Home() {
           </Link>
           <Link
             data-label="Utensílios"
-            href={isCharacterSheets ? "/#utensils" : "#utensils"}
+            href="/utensilios"
           >
             <img src={icons.utensils} alt="" />
             <span>Utensílios</span>
           </Link>
-          <Link data-label="Bestiário" href="/">
+          <Link data-label="Bestiário" href="/bestiario">
             <img src={icons.bestiary} alt="" />
             <span>Bestiário</span>
           </Link>
-          <button
-            aria-disabled="true"
-            className="sidebar-static-item"
-            data-label="Rolagem de Dados — em breve"
-            tabIndex={-1}
-            type="button"
-          >
+          <Link data-label="Rolagem de Dados" href="/dados">
             <img src={icons.dice} alt="" />
             <span>Rolagem de Dados</span>
-          </button>
+          </Link>
         </nav>
 
         <div className="home-sidebar-actions">
-          <button
-            aria-disabled="true"
-            className="sidebar-static-item"
-            data-label="Perfil — em breve"
-            tabIndex={-1}
-            type="button"
-          >
+          <Link data-label="Perfil" href="/perfil">
             <img src={icons.profile} alt="" />
             <span>Perfil</span>
-          </button>
+          </Link>
           <button data-label="Sair" onClick={logout} type="button">
             <img src={icons.logout} alt="" />
             <span>Sair</span>

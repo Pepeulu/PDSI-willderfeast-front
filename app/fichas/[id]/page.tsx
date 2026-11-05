@@ -1,13 +1,17 @@
 "use client";
 
-import Header from "@/components/Header";
-import { ApiError, createFeral, getApiErrorMessage } from "@/lib/api";
+import DashboardShell from "@/components/DashboardShell";
+import {
+  ApiError,
+  createFeral,
+  deleteFeral,
+  Feral,
+  getApiErrorMessage,
+  getFeral,
+} from "@/lib/api";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-
-const lorem =
-  "Lorem ipsum bla bla bla arthur, lorem ipsum bla bla bla arthur, lorem ipsum bla bla bla arthur.";
+import { FormEvent, useEffect, useState } from "react";
 
 type FeralForm = {
   nome: string;
@@ -372,103 +376,146 @@ function CreateCharacterSheet() {
   );
 }
 
-function Divider({ title }: { title: string }) {
+function SheetField({ label, value }: { label: string; value: string | null }) {
   return (
-    <h2 className="sheet-divider">
-      <span>{title}</span>
-    </h2>
+    <div className="api-sheet-field">
+      <span>{label}</span>
+      <p>{value || "Não informado"}</p>
+    </div>
   );
 }
 
-function CharacterSheetDetail() {
+function CharacterSheetDetail({ id }: { id: number }) {
+  const router = useRouter();
+  const [feral, setFeral] = useState<Feral | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    getFeral(id)
+      .then((data) => {
+        if (active) setFeral(data);
+      })
+      .catch((requestError) => {
+        if (requestError instanceof ApiError && requestError.status === 401) {
+          localStorage.removeItem("wilderfeast_user");
+          router.replace(`/login?next=/fichas/${id}`);
+          return;
+        }
+        if (active) {
+          setError(
+            getApiErrorMessage(requestError, "Não foi possível carregar a ficha."),
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, router]);
+
+  async function removeSheet() {
+    if (!feral || !window.confirm(`Excluir definitivamente a ficha de ${feral.nome}?`)) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      await deleteFeral(feral.id);
+      router.replace("/fichas");
+      router.refresh();
+    } catch (requestError) {
+      setError(
+        getApiErrorMessage(requestError, "Não foi possível excluir a ficha."),
+      );
+      setDeleting(false);
+    }
+  }
+
   return (
-    <>
-      <Header />
-      <main className="long-sheet">
-        <section className="sheet-profile">
-          <img src="/assets/wilders.jpg" alt="Askell" />
-          <div>
-            <p>
-              <b>Nome:</b> Askell
-            </p>
-            <p>
-              <b>Título:</b> O alquímico
-            </p>
-            <p>
-              <b>Interpretado por</b> Davi Dilleon
-            </p>
-            <p>
-              <b>Condições:</b>
-            </p>
-            <div className="conditions">
-              <span>Confuso 3</span>
-              <span>Atordoado</span>
-              <span>Ferido 2</span>
-              <span>Em campanha</span>
+    <DashboardShell active="fichas" contentClassName="api-sheet-content">
+      <section className="hub-page api-character-sheet">
+        <header className="profile-brand-heading">
+          <span aria-hidden="true">⚔</span>
+          <b>WILDERFEAST</b>
+          <i />
+        </header>
+
+        {loading ? (
+          <div className="profile-loading" aria-label="Carregando ficha">
+            <span /><span /><span />
+          </div>
+        ) : error && !feral ? (
+          <div className="hub-empty-state api-sheet-error">
+            <span aria-hidden="true">!</span>
+            <h2>Ficha indisponível</h2>
+            <p>{error}</p>
+            <Link href="/fichas">VOLTAR PARA FICHAS</Link>
+          </div>
+        ) : feral ? (
+          <>
+            <div className="api-sheet-hero">
+              <div className="api-sheet-photo">
+                <img
+                  alt={`Retrato de ${feral.nome}`}
+                  src={feral.imagem_url || "/assets/wilders.jpg"}
+                />
+              </div>
+              <div className="api-sheet-identity">
+                <p>FICHA DO FERAL · #{String(feral.id).padStart(3, "0")}</p>
+                <h1>{feral.nome}</h1>
+                <h2>{feral.titulo || "Feral sem título"}</h2>
+                <div className="api-sheet-badges">
+                  <span>{feral.especialidade || "Especialidade não definida"}</span>
+                  <span>VIGOR {feral.vigor_atual} / {feral.vigor_max}</span>
+                </div>
+                <div className="api-sheet-vigor">
+                  <i
+                    style={{
+                      width: `${Math.max(
+                        0,
+                        Math.min(100, (feral.vigor_atual / feral.vigor_max) * 100),
+                      )}%`,
+                    }}
+                  />
+                </div>
+                <div className="api-sheet-actions">
+                  <Link href={`/perfil?feral=${feral.id}`}>EDITAR PERFIL</Link>
+                  <button disabled={deleting} onClick={removeSheet} type="button">
+                    {deleting ? "EXCLUINDO..." : "EXCLUIR FICHA"}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
-        <Divider title="Utensílio" />
-        <h3 className="sheet-center">Bule</h3>
-        <div className="sheet-text">
-          <b>Informações:</b>
-          <p>
-            Alcance: 1 (Golpear)
-            <br />
-            Se quebrado: Alcance 1 (Golpear). Essa parte dá metade do dano.
-            <br />
-            Durabilidade: <mark>100%</mark>
-          </p>
-          <b>Ataques:</b>
-          <p>
-            {lorem}
-            <br />
-            {lorem}
-            <br />
-            {lorem}
-          </p>
-        </div>
-        <Divider title="História" />
-        {["Criação", "Iniciação", "Ambição", "Conexão"].map((item) => (
-          <div className="history-row" key={item}>
-            <b>{item}:</b>
-            <p>
-              {lorem}
-              <br />
-              {lorem}
-            </p>
-          </div>
-        ))}
-        <Divider title="Pontos / Habilidades" />
-        <div className="ability-columns">
-          <div>
-            <h3>Estilos</h3>
-            {["LIGEIRO", "PODEROSO", "PRECISO", "SAGAZ"].map((item) => (
-              <span className="ability" key={item}>
-                {item}
-                <b>0</b>
-              </span>
-            ))}
-          </div>
-          <div>
-            <h3>Habilidades</h3>
-            {[
-              "AGARRAR",
-              "ATIRAR",
-              "ARMAZENAR",
-              "ATRAVESSAR",
-              "ASSEGURAR",
-              "CHAMAR",
-            ].map((item) => (
-              <span className="ability" key={item}>
-                {item}
-                <b>0</b>
-              </span>
-            ))}
-          </div>
-        </div>
-      </main>
-    </>
+
+            <div className="profile-section-title"><span>01</span><h2>Natureza do Feral</h2></div>
+            <div className="api-sheet-field-grid">
+              <SheetField label="Você é" value={feral.voce_e} />
+              <SheetField label="Mas você tenta ser" value={feral.tenta_ser} />
+              <SheetField label="Feras familiares" value={feral.feras_familiares} />
+              <SheetField label="Prato típico" value={feral.prato_tipico} />
+              <SheetField label="Tempero típico" value={feral.tempero_tipico} />
+            </div>
+
+            <div className="profile-section-title"><span>02</span><h2>História e vínculos</h2></div>
+            <div className="api-sheet-history">
+              <SheetField label="Infância e criação" value={feral.infancia_criacao} />
+              <SheetField label="Iniciação como Feral" value={feral.iniciacao_como_feral} />
+              <SheetField label="Ambição" value={feral.ambicao} />
+              <SheetField label="Conexão" value={feral.conexao} />
+            </div>
+
+            {error && <p className="hub-feedback error" role="alert">{error}</p>}
+          </>
+        ) : null}
+      </section>
+    </DashboardShell>
   );
 }
 
@@ -478,6 +525,6 @@ export default function Sheet() {
   return params.id === "novo" ? (
     <CreateCharacterSheet />
   ) : (
-    <CharacterSheetDetail />
+    <CharacterSheetDetail id={Number(params.id)} />
   );
 }

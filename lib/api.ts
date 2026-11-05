@@ -138,6 +138,27 @@ export async function createFeral(payload: CreateFeralPayload) {
   });
 }
 
+export async function getFeral(id: number) {
+  return request<Feral>(`/api/session?resource=feral&id=${id}`);
+}
+
+export async function updateFeral(id: number, payload: CreateFeralPayload) {
+  return request<Feral>("/api/session", {
+    body: JSON.stringify({ action: "update-feral", id, payload }),
+    method: "PUT",
+  });
+}
+
+export async function deleteFeral(id: number) {
+  return request<{ ok: true }>(`/api/session?resource=feral&id=${id}`, {
+    method: "DELETE",
+  });
+}
+
 export async function getMonstros() {
   return request<Monstro[]>("/api/session?resource=monstros");
+}
+
+export async function getMonstro(id: number) {
+  return request<Monstro>(`/api/session?resource=monstro&id=${id}`);
 }

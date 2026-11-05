@@ -159,6 +159,11 @@
     transform 200ms ease;
 }
 
+.home-navigation a > span,
+.home-navigation .sidebar-static-item > span {
+  white-space: normal;
+}
+
 .home-navigation .sidebar-static-item {
   border: 0;
   background: transparent;
@@ -207,6 +212,31 @@
   transition:
     filter 180ms ease,
     transform 180ms ease;
+}
+
+.sidebar-nav-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  color: currentColor;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.home-navigation > a:first-child:not(.active) .sidebar-nav-icon {
+  color: #fff;
+}
+
+.home-navigation a:not(.active):hover .sidebar-nav-icon,
+.home-navigation a:not(.active):focus-visible .sidebar-nav-icon,
+.home-sidebar-actions a:hover .sidebar-nav-icon,
+.home-sidebar-actions button:hover .sidebar-nav-icon {
+  transform: scale(1.12);
 }
 
 .home-navigation .sidebar-static-item,
@@ -295,6 +325,20 @@
 .home-sidebar-actions button img {
   width: 10.5px;
   height: 10.5px;
+}
+
+.home-sidebar-actions a.active {
+  border-radius: 4px;
+  background: #ffb866;
+  color: #2b1700;
+  font-weight: 700;
+}
+
+.home-sidebar-actions a.active:hover,
+.home-sidebar-actions a.active:focus-visible {
+  background: #ffc57f;
+  color: #2b1700;
+  transform: none;
 }
 
 .home-content {
@@ -1168,6 +1212,7 @@
   .home-sidebar-actions a,
   .home-sidebar-actions button,
   .home-sidebar-actions span,
+  .sidebar-nav-icon,
   .home-content,
   .home-monster-card,
   .home-monster-card header,

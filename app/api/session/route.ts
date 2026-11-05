@@ -37,6 +37,7 @@ type SessionBody =
   | { action: "login"; payload: LoginPayload }
   | { action: "register"; payload: RegisterPayload }
   | { action: "create-feral"; payload: CreateFeralPayload }
+  | { action: "update-feral"; id: number; payload: CreateFeralPayload }
   | { token: string };
 
 async function readApiResponse(response: Response) {
@@ -149,12 +150,21 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const resource = new URL(request.url).searchParams.get("resource");
+  const searchParams = new URL(request.url).searchParams;
+  const resource = searchParams.get("resource");
+  const id = searchParams.get("id");
   const paths: Record<string, { authenticated: boolean; path: string }> = {
     ferais: { authenticated: true, path: "/feral/meus" },
     monstros: { authenticated: false, path: "/monstro/" },
   };
-  const target = resource ? paths[resource] : undefined;
+  const target =
+    resource === "feral" && id
+      ? { authenticated: true, path: `/feral/${encodeURIComponent(id)}` }
+      : resource === "monstro" && id
+        ? { authenticated: false, path: `/monstro/${encodeURIComponent(id)}` }
+        : resource
+          ? paths[resource]
+          : undefined;
 
   if (!target) {
     return NextResponse.json({ error: "Recurso inválido." }, { status: 400 });
@@ -180,9 +190,74 @@ export async function GET(request: Request) {
   return NextResponse.json(result.data, { status: response.status });
 }
 
-export async function DELETE() {
+export async function PUT(request: Request) {
+  const body = (await request.json()) as SessionBody;
+
+  if (!("action" in body) || body.action !== "update-feral") {
+    return NextResponse.json({ error: "Ação inválida." }, { status: 400 });
+  }
+
+  if (!Number.isInteger(body.id) || body.id < 1) {
+    return NextResponse.json({ error: "Ficha inválida." }, { status: 400 });
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get("wilderfeast_token")?.value;
+
+  if (!token) {
+    return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
+  }
+
+  const response = await fetch(`${API_URL}/feral/${body.id}`, {
+    body: JSON.stringify(body.payload),
+    cache: "no-store",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    method: "PUT",
+  });
+  const result = await readApiResponse(response);
+
+  if (result.error) {
+    return NextResponse.json({ error: result.error }, { status: response.status });
+  }
+
+  return NextResponse.json(result.data, { status: response.status });
+}
+
+export async function DELETE(request: Request) {
+  const searchParams = new URL(request.url).searchParams;
+  const resource = searchParams.get("resource");
+  const id = searchParams.get("id");
+  const cookieStore = await cookies();
+  const token = cookieStore.get("wilderfeast_token")?.value;
+
+  if (resource === "feral") {
+    if (!token) {
+      return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
+    }
+
+    if (!id || !/^\d+$/.test(id)) {
+      return NextResponse.json({ error: "Ficha inválida." }, { status: 400 });
+    }
+
+    const response = await fetch(`${API_URL}/feral/${id}`, {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${token}` },
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const result = await readApiResponse(response);
+      return NextResponse.json(
+        { error: result.error ?? "Não foi possível excluir a ficha." },
+        { status: response.status },
+      );
+    }
+
+    return NextResponse.json({ ok: true });
+  }
 
   if (token) {
     await fetch(`${API_URL}/auth/logout`, {

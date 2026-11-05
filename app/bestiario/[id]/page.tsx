@@ -1,63 +1,109 @@
-import Header from "@/components/Header";
-const text =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. A besta se move pelo território e protege seu habitat com ferocidade.";
-function Divider({ title }: { title: string }) {
+"use client";
+
+import DashboardShell from "@/components/DashboardShell";
+import { getApiErrorMessage, getMonstro, Monstro } from "@/lib/api";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+
+function BeastInformation({ label, value }: { label: string; value: string | null }) {
   return (
-    <h2 className="sheet-divider">
-      <span>{title}</span>
-    </h2>
+    <div className="beast-information-row">
+      <span>{label}</span>
+      <p>{value || "Não informado pela API."}</p>
+    </div>
   );
 }
+
 export default function BeastSheet() {
+  const params = useParams<{ id: string }>();
+  const id = Number(params.id);
+  const [monster, setMonster] = useState<Monstro | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    if (!Number.isInteger(id) || id < 1) {
+      setError("O identificador desse monstro é inválido.");
+      setLoading(false);
+      return;
+    }
+
+    getMonstro(id)
+      .then((data) => {
+        if (active) setMonster(data);
+      })
+      .catch((requestError) => {
+        if (active) {
+          setError(
+            getApiErrorMessage(requestError, "Não foi possível carregar o monstro."),
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
   return (
-    <>
-      <Header />
-      <main className="long-sheet beast-sheet">
-        <section className="sheet-profile">
-          <img src="/assets/monsters.jpg" alt="Besta" />
-          <div>
-            <p>
-              <b>Nome:</b> Hagsechu
-            </p>
-            <p>
-              <b>Condições:</b>
-            </p>
-            <div className="conditions">
-              <span>Confuso 3</span>
-              <span>Atordoado</span>
-              <span>Ferido 2</span>
-              <span>Em campanha</span>
+    <DashboardShell active="bestiario" contentClassName="beast-detail-content">
+      <section className="hub-page beast-api-sheet">
+        <header className="profile-brand-heading">
+          <span aria-hidden="true">✦</span>
+          <b>WILDERFEAST · BESTIÁRIO</b>
+          <i />
+        </header>
+
+        {loading ? (
+          <div className="profile-loading" aria-label="Carregando monstro">
+            <span /><span /><span />
+          </div>
+        ) : error ? (
+          <div className="hub-empty-state api-sheet-error">
+            <span aria-hidden="true">!</span>
+            <h2>Registro indisponível</h2>
+            <p>{error}</p>
+            <Link href="/bestiario">VOLTAR AO BESTIÁRIO</Link>
+          </div>
+        ) : monster ? (
+          <>
+            <div className="beast-api-hero">
+              <div className="beast-api-image" aria-label={`Ilustração de ${monster.nome}`} role="img" />
+              <div className="beast-api-heading">
+                <p>REGISTRO DE FERA · #{String(monster.id).padStart(3, "0")}</p>
+                <h1>{monster.nome}</h1>
+                <span>{monster.categoria}</span>
+                <div className="beast-api-vigor">
+                  <div><b>VIGOR ATUAL</b><strong>{monster.vigor_atual} / {monster.vigor_base}</strong></div>
+                  <span><i style={{ width: `${Math.max(0, Math.min(100, (monster.vigor_atual / monster.vigor_base) * 100))}%` }} /></span>
+                </div>
+                <Link href="/bestiario">← VOLTAR AO BESTIÁRIO</Link>
+              </div>
             </div>
-          </div>
-        </section>
-        <Divider title="Partes" />
-        {["Escamas", "Garras", "Cauda"].map((x) => (
-          <section className="beast-part" key={x}>
-            <p>
-              <b>{x.toUpperCase()}.</b> Alcance: 1 <em>(AGARRAR PODEROSO)</em> |
-              Passiva: se você conseguir atacar ela fica <strong>PRESA</strong>
-            </p>
-            <p>• Se quebrado: Alcance 1 (AGARRAR PODEROSO)</p>
-          </section>
-        ))}
-        <div className="durability">
-          <b>20</b>
-          <b>20</b>
-          <b>20</b>
-        </div>
-        <Divider title="Comportamento" />
-        {["Comportamento", "Dieta", "Habitat"].map((x) => (
-          <div className="history-row" key={x}>
-            <b>{x}:</b>
-            <p>
-              {text}
-              <br />
-              {text}
-            </p>
-          </div>
-        ))}
-        <Divider title="Pontos / Habilidades" />
-      </main>
-    </>
+
+            <div className="profile-section-title"><span>01</span><h2>Comportamento</h2></div>
+            <div className="beast-information-list">
+              <BeastInformation label="História" value={monster.historia} />
+              <BeastInformation label="Alvos" value={monster.alvos} />
+              <BeastInformation label="Dieta" value={monster.dieta} />
+              <BeastInformation label="Habitat" value={monster.habitat} />
+            </div>
+
+            <div className="beast-api-footnote">
+              <span aria-hidden="true">◇</span>
+              <p>
+                Partes, condições e técnicas não fazem parte da resposta atual do
+                endpoint de monstros e, por isso, não são exibidas com dados fictícios.
+              </p>
+            </div>
+          </>
+        ) : null}
+      </section>
+    </DashboardShell>
   );
 }
