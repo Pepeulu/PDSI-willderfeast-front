@@ -251,7 +251,7 @@ export async function DELETE(request: Request) {
     if (!response.ok) {
       const result = await readApiResponse(response);
       return NextResponse.json(
-        { error: result.error ?? "Não foi possível excluir a ficha." },
+        { error: result.error },
         { status: response.status },
       );
     }

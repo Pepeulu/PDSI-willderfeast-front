@@ -58,32 +58,32 @@ const icons = {
 
 type MonsterCardProps = {
   harvest: string;
-  harvestLabel?: string;
+  harvestLabel: string;
   harvestIcon: string;
   href: string;
   image: string;
-  imageClassName?: string;
+  imageClassName: string;
   name: string;
   tags: Array<{ icon: string; label: string }>;
   threat: string;
   threatLevel: "low" | "high";
   weakness: string;
-  weaknessLabel?: string;
+  weaknessLabel: string;
   weaknessIcon: string;
 };
 
 function MonsterCard({
   harvest,
-  harvestLabel = "Coleta",
+  harvestLabel,
   harvestIcon,
   image,
-  imageClassName = "",
+  imageClassName,
   name,
   tags,
   threat,
   threatLevel,
   weakness,
-  weaknessLabel = "Fraqueza",
+  weaknessLabel,
   weaknessIcon,
 }: MonsterCardProps) {
   return (
