@@ -1,3 +1,5 @@
+/* Define o layout compartilhado de páginas, painéis e grades. */
+
 .figma-page {
   width: min(1160px, calc(100% - 64px));
   margin: 0 auto;

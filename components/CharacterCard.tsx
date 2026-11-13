@@ -1,5 +1,11 @@
+/**
+ * Cartão ilustrativo de ficha de personagem.
+ * @module
+ */
+
 import Link from "next/link";
 
+/** Apresenta os atributos de exemplo e aceita a personalização do nome e da imagem. */
 export default function CharacterCard({
   name = "Gata Samurai",
   image = "/assets/cleaver.png",
@@ -9,7 +15,6 @@ export default function CharacterCard({
 }) {
   return (
     <article className="figma-character">
-
       <div className="character-top">
         <img src={image} alt={name} />
 
@@ -23,7 +28,6 @@ export default function CharacterCard({
       </div>
 
       <div className="character-stats">
-
         <span>
           Pod<small>+1</small>
         </span>
@@ -39,11 +43,9 @@ export default function CharacterCard({
         <span>
           Sag<small>+1</small>
         </span>
-
       </div>
 
       <div className="character-meta">
-        
         <b>
           Especialidade<small>Apanhador</small>
         </b>
@@ -51,11 +53,9 @@ export default function CharacterCard({
         <b>
           Utensílio<small>Cutelo</small>
         </b>
-
       </div>
 
       <Link href="/fichas/personagem">Ficha Completa</Link>
-
     </article>
   );
 }

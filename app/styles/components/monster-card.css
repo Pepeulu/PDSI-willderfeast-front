@@ -1,3 +1,5 @@
+/* Estiliza o cartão de besta e o recorte das imagens. */
+
 .monster-card {
   display: flex;
   flex-direction: column;

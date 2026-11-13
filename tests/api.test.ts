@@ -1,5 +1,10 @@
 // @vitest-environment node
 
+/**
+ * Verifica as requisições do cliente da API e a interpretação das respostas HTTP.
+ * @module
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApiError,
@@ -16,7 +21,10 @@ import {
   type CreateFeralPayload,
 } from "../lib/api";
 
+/** Substitui a rede e registra as requisições emitidas pelo cliente. */
 const fetchMock = vi.fn<typeof fetch>();
+
+/** Dados fictícios para autenticação, fichas e registros do bestiário. */
 const credentials = { email: "feral@example.test", senha: "senha-de-teste" };
 const registration = { ...credentials, nome: "Nina" };
 const sheet: CreateFeralPayload = {
@@ -105,26 +113,35 @@ describe("cliente da API", () => {
     fetchMock.mockResolvedValueOnce(Response.json(result));
 
     await expect(run()).resolves.toEqual(result);
-    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(`/api/session?resource=${resource}`, {
-      cache: "no-store",
-      headers: { "Content-Type": "application/json" },
-    });
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+      `/api/session?resource=${resource}`,
+      {
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   });
 
   it("envia DELETE para o recurso da ficha", async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ ok: true }));
 
     await expect(deleteFeral(3)).resolves.toEqual({ ok: true });
-    expect(fetchMock).toHaveBeenCalledExactlyOnceWith("/api/session?resource=feral&id=3", {
-      cache: "no-store",
-      headers: { "Content-Type": "application/json" },
-      method: "DELETE",
-    });
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+      "/api/session?resource=feral&id=3",
+      {
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+      },
+    );
   });
 
   it.each([
     {
-      body: JSON.stringify({ error: "Sessão expirada.", detail: "Detalhe adicional." }),
+      body: JSON.stringify({
+        error: "Sessão expirada.",
+        detail: "Detalhe adicional.",
+      }),
       status: 401,
       message: "Sessão expirada.",
     },
@@ -139,11 +156,18 @@ describe("cliente da API", () => {
       message: "Não foi possível acessar a API.",
     },
     { body: "<html>", status: 503, message: "Não foi possível acessar a API." },
-  ])("expõe o status $status e a mensagem de erro", async ({ body, status, message }) => {
-    fetchMock.mockResolvedValueOnce(new Response(body, { status }));
+  ])(
+    "expõe o status $status e a mensagem de erro",
+    async ({ body, status, message }) => {
+      fetchMock.mockResolvedValueOnce(new Response(body, { status }));
 
-    await expect(getFeral(3)).rejects.toMatchObject({ name: "ApiError", status, message });
-  });
+      await expect(getFeral(3)).rejects.toMatchObject({
+        name: "ApiError",
+        status,
+        message,
+      });
+    },
+  );
 
   it("retorna nulo quando a resposta de sucesso não contém JSON", async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
@@ -154,12 +178,17 @@ describe("cliente da API", () => {
 
 describe("getApiErrorMessage", () => {
   it("usa a mensagem da API ou o texto alternativo para falhas desconhecidas", () => {
-    expect(getApiErrorMessage(new ApiError("Sessão expirada.", 401), "Outra mensagem.")).toBe(
-      "Sessão expirada.",
+    expect(
+      getApiErrorMessage(
+        new ApiError("Sessão expirada.", 401),
+        "Outra mensagem.",
+      ),
+    ).toBe("Sessão expirada.");
+    expect(
+      getApiErrorMessage(new Error("Falha de rede."), "Tente mais tarde."),
+    ).toBe("Tente mais tarde.");
+    expect(getApiErrorMessage(undefined)).toBe(
+      "Não foi possível acessar a API.",
     );
-    expect(getApiErrorMessage(new Error("Falha de rede."), "Tente mais tarde.")).toBe(
-      "Tente mais tarde.",
-    );
-    expect(getApiErrorMessage(undefined)).toBe("Não foi possível acessar a API.");
   });
 });

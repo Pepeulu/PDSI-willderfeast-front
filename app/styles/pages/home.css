@@ -1,3 +1,5 @@
+/* Define o painel inicial, o menu lateral e seus blocos de conteúdo. */
+
 .home-dashboard {
   min-height: 100vh;
   background: #091423;
@@ -480,8 +482,7 @@
 .skeleton-card-image {
   height: 192px;
   border-bottom: 1px solid #2b3546;
-  background:
-    radial-gradient(circle, #253247 0, #101a2a 62%, #091423 100%);
+  background: radial-gradient(circle, #253247 0, #101a2a 62%, #091423 100%);
 }
 
 .skeleton-card-details {

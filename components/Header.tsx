@@ -1,11 +1,18 @@
 "use client";
 
+/**
+ * Cabeçalho com atalhos de navegação e saída da sessão.
+ * @module
+ */
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+/** Exibe a marca e os links rápidos para as fichas e o bestiário. */
 export default function Header() {
   const router = useRouter();
 
+  /** Encerra a sessão, apaga a identidade local e volta ao login. */
   async function logout() {
     await fetch("/api/session", { method: "DELETE" });
     localStorage.removeItem("wilderfeast_user");

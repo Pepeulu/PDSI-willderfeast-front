@@ -1,20 +1,26 @@
+/** @file Rota do Next.js que gerencia o cookie de sessão e encaminha operações à API Wilderfeast. */
+
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+/** URL base da API externa, configurável pela variável `NEXT_PUBLIC_API_URL`. */
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "https://poas-wilderfeast.onrender.com";
 
+/** Credenciais recebidas no formato JSON da aplicação. */
 type LoginPayload = {
   email: string;
   senha: string;
 };
 
+/** Campos de cadastro esperados pela API externa. */
 type RegisterPayload = {
   email: string;
   nome: string;
   senha: string;
 };
 
+/** Campos editáveis que a API aceita na criação e na atualização de fichas. */
 type CreateFeralPayload = {
   nome: string;
   titulo: string | null;
@@ -33,6 +39,7 @@ type CreateFeralPayload = {
   conexao: string | null;
 };
 
+/** Formatos de corpo reconhecidos pelos métodos POST e PUT da rota. */
 type SessionBody =
   | { action: "login"; payload: LoginPayload }
   | { action: "register"; payload: RegisterPayload }
@@ -40,6 +47,7 @@ type SessionBody =
   | { action: "update-feral"; id: number; payload: CreateFeralPayload }
   | { token: string };
 
+/** Extrai o JSON da API externa e padroniza o texto das respostas de erro. */
 async function readApiResponse(response: Response) {
   const data = await response.json().catch(() => null);
 
@@ -55,6 +63,7 @@ async function readApiResponse(response: Response) {
   return { data: null, error: message };
 }
 
+/** Grava o token em um cookie HttpOnly com validade de sete dias. */
 async function saveToken(token: string) {
   const cookieStore = await cookies();
   cookieStore.set("wilderfeast_token", token, {
@@ -66,6 +75,7 @@ async function saveToken(token: string) {
   });
 }
 
+/** Encaminha cadastro, login ou criação de ficha e aceita o estabelecimento direto da sessão por token. */
 export async function POST(request: Request) {
   const body = (await request.json()) as SessionBody;
 
@@ -79,13 +89,17 @@ export async function POST(request: Request) {
     const result = await readApiResponse(response);
 
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: response.status });
+      return NextResponse.json(
+        { error: result.error },
+        { status: response.status },
+      );
     }
 
     return NextResponse.json(result.data, { status: response.status });
   }
 
   if ("action" in body && body.action === "login") {
+    // O endpoint externo de login espera um formulário com `username` e `password`.
     const form = new URLSearchParams({
       password: body.payload.senha,
       username: body.payload.email,
@@ -99,7 +113,10 @@ export async function POST(request: Request) {
     const result = await readApiResponse(response);
 
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: response.status });
+      return NextResponse.json(
+        { error: result.error },
+        { status: response.status },
+      );
     }
 
     const loginData = result.data as {
@@ -120,7 +137,10 @@ export async function POST(request: Request) {
     const token = cookieStore.get("wilderfeast_token")?.value;
 
     if (!token) {
-      return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Sessão não encontrada." },
+        { status: 401 },
+      );
     }
 
     const response = await fetch(`${API_URL}/feral/`, {
@@ -135,7 +155,10 @@ export async function POST(request: Request) {
     const result = await readApiResponse(response);
 
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: response.status });
+      return NextResponse.json(
+        { error: result.error },
+        { status: response.status },
+      );
     }
 
     return NextResponse.json(result.data, { status: response.status });
@@ -146,17 +169,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  return NextResponse.json({ error: "Dados da sessão ausentes." }, { status: 400 });
+  return NextResponse.json(
+    { error: "Dados da sessão ausentes." },
+    { status: 400 },
+  );
 }
 
+/** Consulta fichas da sessão ou registros do bestiário conforme o recurso solicitado. */
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
   const resource = searchParams.get("resource");
   const id = searchParams.get("id");
+  /** Recursos de listagem e seus requisitos de autenticação. */
   const paths: Record<string, { authenticated: boolean; path: string }> = {
     ferais: { authenticated: true, path: "/feral/meus" },
     monstros: { authenticated: false, path: "/monstro/" },
   };
+  /** Destino selecionado, com o identificador codificado nas rotas de detalhe. */
   const target =
     resource === "feral" && id
       ? { authenticated: true, path: `/feral/${encodeURIComponent(id)}` }
@@ -174,7 +203,10 @@ export async function GET(request: Request) {
   const token = cookieStore.get("wilderfeast_token")?.value;
 
   if (target.authenticated && !token) {
-    return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Sessão não encontrada." },
+      { status: 401 },
+    );
   }
 
   const response = await fetch(`${API_URL}${target.path}`, {
@@ -184,12 +216,16 @@ export async function GET(request: Request) {
   const result = await readApiResponse(response);
 
   if (result.error) {
-    return NextResponse.json({ error: result.error }, { status: response.status });
+    return NextResponse.json(
+      { error: result.error },
+      { status: response.status },
+    );
   }
 
   return NextResponse.json(result.data, { status: response.status });
 }
 
+/** Valida a ação e o identificador e encaminha a atualização da ficha autenticada. */
 export async function PUT(request: Request) {
   const body = (await request.json()) as SessionBody;
 
@@ -205,7 +241,10 @@ export async function PUT(request: Request) {
   const token = cookieStore.get("wilderfeast_token")?.value;
 
   if (!token) {
-    return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Sessão não encontrada." },
+      { status: 401 },
+    );
   }
 
   const response = await fetch(`${API_URL}/feral/${body.id}`, {
@@ -220,12 +259,16 @@ export async function PUT(request: Request) {
   const result = await readApiResponse(response);
 
   if (result.error) {
-    return NextResponse.json({ error: result.error }, { status: response.status });
+    return NextResponse.json(
+      { error: result.error },
+      { status: response.status },
+    );
   }
 
   return NextResponse.json(result.data, { status: response.status });
 }
 
+/** Exclui uma ficha quando o recurso é `feral` ou encerra a sessão nos demais casos. */
 export async function DELETE(request: Request) {
   const searchParams = new URL(request.url).searchParams;
   const resource = searchParams.get("resource");
@@ -235,7 +278,10 @@ export async function DELETE(request: Request) {
 
   if (resource === "feral") {
     if (!token) {
-      return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Sessão não encontrada." },
+        { status: 401 },
+      );
     }
 
     if (!id || !/^\d+$/.test(id)) {
@@ -260,6 +306,7 @@ export async function DELETE(request: Request) {
   }
 
   if (token) {
+    // A sessão local é encerrada mesmo se a solicitação de logout falhar na rede.
     await fetch(`${API_URL}/auth/logout`, {
       cache: "no-store",
       headers: { Authorization: `Bearer ${token}` },

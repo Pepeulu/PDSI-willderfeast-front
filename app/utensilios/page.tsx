@@ -1,12 +1,19 @@
+/**
+ * Inventário local com um utensílio de exemplo enquanto a API não oferece a rota.
+ * @module app/utensilios
+ */
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
 import { useState } from "react";
 
+/** Mostra o utensílio equipado quando corresponde ao termo de busca. */
 export default function Utensilios() {
   const [query, setQuery] = useState("");
-  const matches = "cutelo de ferro cortante potente preciso"
-    .includes(query.trim().toLocaleLowerCase("pt-BR"));
+  /** Correspondência por nome, estilo ou propriedade do item equipado. */
+  const matches = "cutelo de ferro cortante potente preciso".includes(
+    query.trim().toLocaleLowerCase("pt-BR"),
+  );
 
   return (
     <DashboardShell active="utensilios" contentClassName="utensils-content">
@@ -30,11 +37,6 @@ export default function Utensilios() {
           />
         </label>
 
-       
-        {/* ''    A API atual possui o modelo de utensílio, mas ainda não publica uma rota */}
-            {/* de inventário. O item abaixo mantém a referência visual do Figma.' */}
-         
-
         <section className="equipped-utensil-section">
           <div className="equipped-utensil-heading">
             <p>UTENSÍLIO EQUIPADO</p>
@@ -49,15 +51,24 @@ export default function Utensilios() {
               </div>
               <div className="managed-utensil-copy">
                 <small>UTENSÍLIO DE CAÇA</small>
-                <h2><i aria-hidden="true" />CUTELO DE FERRO<i aria-hidden="true" /></h2>
+                <h2>
+                  <i aria-hidden="true" />
+                  CUTELO DE FERRO
+                  <i aria-hidden="true" />
+                </h2>
                 <div className="managed-utensil-stats">
                   <strong>3 POTENTE</strong>
                   <strong>2 PRECISO</strong>
                   <span>⚔ CORTANTE</span>
                 </div>
                 <div className="managed-utensil-durability">
-                  <div><b>DURABILIDADE</b><strong>4 / 5</strong></div>
-                  <span><i /></span>
+                  <div>
+                    <b>DURABILIDADE</b>
+                    <strong>4 / 5</strong>
+                  </div>
+                  <span>
+                    <i />
+                  </span>
                 </div>
                 <p>
                   Ferramenta pesada e confiável, adequada para cortes precisos

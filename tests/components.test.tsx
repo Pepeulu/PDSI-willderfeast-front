@@ -1,4 +1,12 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+/** Verifica navegação, sessão local e renderização dos componentes compartilhados. */
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CharacterCard from "@/components/CharacterCard";
 import DashboardShell from "@/components/DashboardShell";
@@ -16,35 +24,83 @@ beforeEach(() => {
 });
 
 describe("DashboardShell", () => {
+  it("grava a preferência uma única vez por clique no modo estrito", () => {
+    const savePreference = vi.spyOn(Storage.prototype, "setItem");
+    render(
+      <StrictMode>
+        <DashboardShell active="inicio">Início</DashboardShell>
+      </StrictMode>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Minimizar menu" }));
+
+    expect(savePreference).toHaveBeenCalledExactlyOnceWith(
+      "wilderfeast_sidebar_collapsed",
+      "true",
+    );
+  });
+
   it("exibe a navegação, destaca a página ativa e persiste a preferência do menu", () => {
     const { rerender, unmount } = render(
-      <DashboardShell active="dados" contentClassName="dice-content" dashboardClassName="dice-dashboard">
+      <DashboardShell
+        active="dados"
+        contentClassName="dice-content"
+        dashboardClassName="dice-dashboard"
+      >
         <h1>Mesa de caça</h1>
       </DashboardShell>,
     );
 
     expect(screen.getByText("FERAL")).toBeTruthy();
-    expect(screen.getByRole("main").className).toBe("home-content dice-content");
-    expect(screen.getByRole("complementary").parentElement?.className).toBe("home-dashboard dice-dashboard");
+    expect(screen.getByRole("main").className).toBe(
+      "home-content dice-content",
+    );
+    expect(screen.getByRole("complementary").parentElement?.className).toBe(
+      "home-dashboard dice-dashboard",
+    );
     expect(screen.getByRole("heading", { name: "Mesa de caça" })).toBeTruthy();
 
-    const navigation = screen.getByRole("navigation", { name: "Navegação principal" });
-    expect(within(navigation).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
-      "/", "/fichas", "/utensilios", "/bestiario", "/dados",
-    ]);
-    expect(within(navigation).getByRole("link", { name: "Rolagem de Dados" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getByRole("link", { name: "Perfil" }).hasAttribute("aria-current")).toBe(false);
+    const navigation = screen.getByRole("navigation", {
+      name: "Navegação principal",
+    });
+    expect(
+      within(navigation)
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("href")),
+    ).toEqual(["/", "/fichas", "/utensilios", "/bestiario", "/dados"]);
+    expect(
+      within(navigation)
+        .getByRole("link", { name: "Rolagem de Dados" })
+        .getAttribute("aria-current"),
+    ).toBe("page");
+    expect(
+      screen.getByRole("link", { name: "Perfil" }).hasAttribute("aria-current"),
+    ).toBe(false);
 
     const minimize = screen.getByRole("button", { name: "Minimizar menu" });
     expect(minimize.getAttribute("aria-expanded")).toBe("true");
     fireEvent.click(minimize);
-    expect(screen.getByRole("button", { name: "Expandir menu" }).getAttribute("aria-expanded")).toBe("false");
+    expect(
+      screen
+        .getByRole("button", { name: "Expandir menu" })
+        .getAttribute("aria-expanded"),
+    ).toBe("false");
     expect(localStorage.getItem("wilderfeast_sidebar_collapsed")).toBe("true");
-    expect(screen.getByRole("complementary").parentElement?.classList.contains("sidebar-collapsed")).toBe(true);
+    expect(
+      screen
+        .getByRole("complementary")
+        .parentElement?.classList.contains("sidebar-collapsed"),
+    ).toBe(true);
 
     rerender(<DashboardShell active="perfil">Perfil do Feral</DashboardShell>);
-    expect(screen.getByRole("link", { name: "Perfil" }).getAttribute("aria-current")).toBe("page");
-    expect(within(navigation).getByRole("link", { name: "Rolagem de Dados" }).hasAttribute("aria-current")).toBe(false);
+    expect(
+      screen.getByRole("link", { name: "Perfil" }).getAttribute("aria-current"),
+    ).toBe("page");
+    expect(
+      within(navigation)
+        .getByRole("link", { name: "Rolagem de Dados" })
+        .hasAttribute("aria-current"),
+    ).toBe(false);
     expect(screen.getByRole("main").className).toBe("home-content");
 
     unmount();
@@ -80,15 +136,21 @@ it.each([
   ["cabeçalho", <Header />],
   ["menu lateral", <DashboardShell active="inicio">Início</DashboardShell>],
 ])("encerra a sessão pelo %s", async (_location, component) => {
-  const request = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ ok: true }));
+  const request = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(Response.json({ ok: true }));
   vi.stubGlobal("fetch", request);
   localStorage.setItem("wilderfeast_user", '{"nome":"Ágata"}');
   render(component);
 
   fireEvent.click(screen.getByRole("button", { name: "Sair" }));
 
-  expect(request).toHaveBeenCalledExactlyOnceWith("/api/session", { method: "DELETE" });
-  await waitFor(() => expect(router.replace).toHaveBeenCalledExactlyOnceWith("/login"));
+  expect(request).toHaveBeenCalledExactlyOnceWith("/api/session", {
+    method: "DELETE",
+  });
+  await waitFor(() =>
+    expect(router.replace).toHaveBeenCalledExactlyOnceWith("/login"),
+  );
   expect(router.refresh).toHaveBeenCalledOnce();
   expect(localStorage.getItem("wilderfeast_user")).toBeNull();
 });
@@ -96,9 +158,15 @@ it.each([
 it("oferece links para o início, as fichas e o bestiário no cabeçalho", () => {
   render(<Header />);
 
-  expect(screen.getByRole("link", { name: /Wilderfeast/ }).getAttribute("href")).toBe("/");
-  expect(screen.getByRole("link", { name: "Fichas" }).getAttribute("href")).toBe("/fichas");
-  expect(screen.getByRole("link", { name: "Bestiário" }).getAttribute("href")).toBe("/bestiario");
+  expect(
+    screen.getByRole("link", { name: /Wilderfeast/ }).getAttribute("href"),
+  ).toBe("/");
+  expect(
+    screen.getByRole("link", { name: "Fichas" }).getAttribute("href"),
+  ).toBe("/fichas");
+  expect(
+    screen.getByRole("link", { name: "Bestiário" }).getAttribute("href"),
+  ).toBe("/bestiario");
 });
 
 it("exibe a marca e os créditos no rodapé", () => {
@@ -112,23 +180,33 @@ it("exibe a marca e os créditos no rodapé", () => {
 it("renderiza a ficha padrão e aceita nome e imagem personalizados", () => {
   const { rerender } = render(<CharacterCard />);
 
-  expect(screen.getByRole("img", { name: "Gata Samurai" }).getAttribute("src")).toBe("/assets/cleaver.png");
-  expect(screen.getByRole("link", { name: "Ficha Completa" }).getAttribute("href")).toBe("/fichas/personagem");
+  expect(
+    screen.getByRole("img", { name: "Gata Samurai" }).getAttribute("src"),
+  ).toBe("/assets/cleaver.png");
+  expect(
+    screen.getByRole("link", { name: "Ficha Completa" }).getAttribute("href"),
+  ).toBe("/fichas/personagem");
 
   rerender(<CharacterCard name="Ágata" image="/agata.png" />);
-  expect(screen.getByRole("img", { name: "Ágata" }).getAttribute("src")).toBe("/agata.png");
+  expect(screen.getByRole("img", { name: "Ágata" }).getAttribute("src")).toBe(
+    "/agata.png",
+  );
   expect(screen.getByText("Ágata")).toBeTruthy();
 });
 
 it("associa cada cartão à sua besta e ajusta o texto pelo índice", () => {
   const { rerender } = render(<MonsterCard />);
 
-  expect(screen.getByRole("link", { name: /Besta 1/ }).getAttribute("href")).toBe("/bestiario/1");
+  expect(
+    screen.getByRole("link", { name: /Besta 1/ }).getAttribute("href"),
+  ).toBe("/bestiario/1");
   expect(screen.getByRole("img", { name: "Hagsechu" })).toBeTruthy();
   expect(screen.getByText("Faz isso e aquilo")).toBeTruthy();
 
   rerender(<MonsterCard index={7} />);
-  expect(screen.getByRole("link", { name: /Besta 8/ }).getAttribute("href")).toBe("/bestiario/8");
+  expect(
+    screen.getByRole("link", { name: /Besta 8/ }).getAttribute("href"),
+  ).toBe("/bestiario/8");
   expect(screen.getByRole("img", { name: "Mammudo" })).toBeTruthy();
   expect(screen.getByText("É muito difícil de caçar")).toBeTruthy();
 });

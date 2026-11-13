@@ -1,3 +1,5 @@
+/* Estiliza a listagem de fichas e seus cartões. */
+
 .character-sheets-content {
   min-height: 100vh;
 }
@@ -150,9 +152,7 @@
   flex-basis: 20px;
 }
 
-.sidebar-collapsed.character-sheets-dashboard
-  .home-navigation
-  > a:first-child {
+.sidebar-collapsed.character-sheets-dashboard .home-navigation > a:first-child {
   min-height: 44px;
   margin: 0;
 }

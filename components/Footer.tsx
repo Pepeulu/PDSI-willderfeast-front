@@ -1,3 +1,9 @@
+/**
+ * Rodapé com a identificação do projeto.
+ * @module
+ */
+
+/** Renderiza a marca Wilderfeast, o texto do rodapé e o aviso de copyright. */
 export default function Footer() {
   return (
     <footer>

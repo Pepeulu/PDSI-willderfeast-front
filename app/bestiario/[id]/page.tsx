@@ -1,3 +1,7 @@
+/**
+ * Rota de detalhes de um registro do bestiário.
+ * @module app/bestiario/[id]
+ */
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
@@ -6,7 +10,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-function BeastInformation({ label, value }: { label: string; value: string | null }) {
+/** Apresenta um atributo e informa quando a API deixou o campo vazio. */
+function BeastInformation({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null;
+}) {
   return (
     <div className="beast-information-row">
       <span>{label}</span>
@@ -15,6 +26,7 @@ function BeastInformation({ label, value }: { label: string; value: string | nul
   );
 }
 
+/** Consulta o monstro pelo identificador da rota e apresenta seu vigor e comportamento. */
 export default function BeastSheet() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -37,7 +49,10 @@ export default function BeastSheet() {
       .catch((requestError) => {
         if (active) {
           setError(
-            getApiErrorMessage(requestError, "Não foi possível carregar o monstro."),
+            getApiErrorMessage(
+              requestError,
+              "Não foi possível carregar o monstro.",
+            ),
           );
         }
       })
@@ -61,7 +76,9 @@ export default function BeastSheet() {
 
         {loading ? (
           <div className="profile-loading" aria-label="Carregando monstro">
-            <span /><span /><span />
+            <span />
+            <span />
+            <span />
           </div>
         ) : error ? (
           <div className="hub-empty-state api-sheet-error">
@@ -73,20 +90,38 @@ export default function BeastSheet() {
         ) : monster ? (
           <>
             <div className="beast-api-hero">
-              <div className="beast-api-image" aria-label={`Ilustração de ${monster.nome}`} role="img" />
+              <div
+                className="beast-api-image"
+                aria-label={`Ilustração de ${monster.nome}`}
+                role="img"
+              />
               <div className="beast-api-heading">
                 <p>REGISTRO DE FERA · #{String(monster.id).padStart(3, "0")}</p>
                 <h1>{monster.nome}</h1>
                 <span>{monster.categoria}</span>
                 <div className="beast-api-vigor">
-                  <div><b>VIGOR ATUAL</b><strong>{monster.vigor_atual} / {monster.vigor_base}</strong></div>
-                  <span><i style={{ width: `${Math.max(0, Math.min(100, (monster.vigor_atual / monster.vigor_base) * 100))}%` }} /></span>
+                  <div>
+                    <b>VIGOR ATUAL</b>
+                    <strong>
+                      {monster.vigor_atual} / {monster.vigor_base}
+                    </strong>
+                  </div>
+                  <span>
+                    <i
+                      style={{
+                        width: `${Math.max(0, Math.min(100, (monster.vigor_atual / monster.vigor_base) * 100))}%`,
+                      }}
+                    />
+                  </span>
                 </div>
                 <Link href="/bestiario">← VOLTAR AO BESTIÁRIO</Link>
               </div>
             </div>
 
-            <div className="profile-section-title"><span>01</span><h2>Comportamento</h2></div>
+            <div className="profile-section-title">
+              <span>01</span>
+              <h2>Comportamento</h2>
+            </div>
             <div className="beast-information-list">
               <BeastInformation label="História" value={monster.historia} />
               <BeastInformation label="Alvos" value={monster.alvos} />
@@ -97,8 +132,9 @@ export default function BeastSheet() {
             <div className="beast-api-footnote">
               <span aria-hidden="true">◇</span>
               <p>
-                Partes, condições e técnicas não fazem parte da resposta atual do
-                endpoint de monstros e, por isso, não são exibidas com dados fictícios.
+                Partes, condições e técnicas não fazem parte da resposta atual
+                do endpoint de monstros e, por isso, não são exibidas com dados
+                fictícios.
               </p>
             </div>
           </>

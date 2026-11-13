@@ -1,3 +1,7 @@
+/**
+ * Edição do perfil e dos atributos de personagens vinculados ao usuário.
+ * @module app/perfil
+ */
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
@@ -13,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
+/** Rascunho do formulário em texto, incluindo os campos numéricos editáveis. */
 type FeralDraft = {
   ambicao: string;
   conexao: string;
@@ -31,6 +36,7 @@ type FeralDraft = {
   voceE: string;
 };
 
+/** Estado inicial do formulário até que uma ficha seja selecionada. */
 const emptyDraft: FeralDraft = {
   ambicao: "",
   conexao: "",
@@ -49,6 +55,7 @@ const emptyDraft: FeralDraft = {
   voceE: "",
 };
 
+/** Converte o registro da API em valores para os campos controlados. */
 function draftFromFeral(feral: Feral): FeralDraft {
   return {
     ambicao: feral.ambicao ?? "",
@@ -69,10 +76,12 @@ function draftFromFeral(feral: Feral): FeralDraft {
   };
 }
 
+/** Normaliza campos opcionais para que valores em branco sejam enviados como nulos. */
 function nullable(value: string) {
   return value.trim() || null;
 }
 
+/** Carrega as fichas do usuário e apresenta o editor da ficha selecionada. */
 export default function Perfil() {
   const router = useRouter();
   const [ferais, setFerais] = useState<Feral[]>([]);
@@ -108,7 +117,10 @@ export default function Perfil() {
         }
         if (active) {
           setError(
-            getApiErrorMessage(requestError, "Não foi possível carregar o perfil."),
+            getApiErrorMessage(
+              requestError,
+              "Não foi possível carregar o perfil.",
+            ),
           );
         }
       })
@@ -121,10 +133,12 @@ export default function Perfil() {
     };
   }, [router]);
 
+  /** Atualiza um campo do rascunho preservando os demais valores. */
   function update(field: keyof FeralDraft, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
   }
 
+  /** Abre o rascunho da ficha escolhida e limpa as mensagens da edição anterior. */
   function selectFeral(id: number) {
     const selected = ferais.find((feral) => feral.id === id);
     if (!selected) return;
@@ -134,6 +148,7 @@ export default function Perfil() {
     setMessage("");
   }
 
+  /** Valida o nome e o vigor, persiste a edição e atualiza a cópia local da ficha. */
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedId) return;
@@ -207,7 +222,9 @@ export default function Perfil() {
 
         {loading ? (
           <div className="profile-loading" aria-label="Carregando perfil">
-            <span /><span /><span />
+            <span />
+            <span />
+            <span />
           </div>
         ) : ferais.length === 0 && !error ? (
           <div className="hub-empty-state profile-empty">
@@ -226,59 +243,213 @@ export default function Perfil() {
                   value={selectedId ?? ""}
                 >
                   {ferais.map((feral) => (
-                    <option key={feral.id} value={feral.id}>{feral.nome}</option>
+                    <option key={feral.id} value={feral.id}>
+                      {feral.nome}
+                    </option>
                   ))}
                 </select>
               </label>
-              {selectedId && <Link href={`/fichas/${selectedId}`}>VER FICHA COMPLETA</Link>}
+              {selectedId && (
+                <Link href={`/fichas/${selectedId}`}>VER FICHA COMPLETA</Link>
+              )}
             </div>
 
             <div className="profile-identity-grid">
               <div className="profile-fields-grid">
-                <label><span>Nome *</span><input onChange={(event) => update("nome", event.target.value)} required value={draft.nome} /></label>
-                <label><span>Título</span><input onChange={(event) => update("titulo", event.target.value)} value={draft.titulo} /></label>
-                <label className="profile-field-wide"><span>Especialidade</span><input onChange={(event) => update("especialidade", event.target.value)} value={draft.especialidade} /></label>
-                <label><span>Vigor atual *</span><input min="0" onChange={(event) => update("vigorAtual", event.target.value)} required type="number" value={draft.vigorAtual} /></label>
-                <label><span>Vigor máximo *</span><input min="1" onChange={(event) => update("vigorMaximo", event.target.value)} required type="number" value={draft.vigorMaximo} /></label>
+                <label>
+                  <span>Nome *</span>
+                  <input
+                    onChange={(event) => update("nome", event.target.value)}
+                    required
+                    value={draft.nome}
+                  />
+                </label>
+                <label>
+                  <span>Título</span>
+                  <input
+                    onChange={(event) => update("titulo", event.target.value)}
+                    value={draft.titulo}
+                  />
+                </label>
+                <label className="profile-field-wide">
+                  <span>Especialidade</span>
+                  <input
+                    onChange={(event) =>
+                      update("especialidade", event.target.value)
+                    }
+                    value={draft.especialidade}
+                  />
+                </label>
+                <label>
+                  <span>Vigor atual *</span>
+                  <input
+                    min="0"
+                    onChange={(event) =>
+                      update("vigorAtual", event.target.value)
+                    }
+                    required
+                    type="number"
+                    value={draft.vigorAtual}
+                  />
+                </label>
+                <label>
+                  <span>Vigor máximo *</span>
+                  <input
+                    min="1"
+                    onChange={(event) =>
+                      update("vigorMaximo", event.target.value)
+                    }
+                    required
+                    type="number"
+                    value={draft.vigorMaximo}
+                  />
+                </label>
               </div>
               <div className="profile-image-panel">
                 {draft.imagemUrl ? (
-                  <img alt={`Imagem de ${draft.nome || "Feral"}`} src={draft.imagemUrl} />
+                  <img
+                    alt={`Imagem de ${draft.nome || "Feral"}`}
+                    src={draft.imagemUrl}
+                  />
                 ) : (
-                  <div><span aria-hidden="true">◇</span><p>Área para imagem do Feral</p></div>
+                  <div>
+                    <span aria-hidden="true">◇</span>
+                    <p>Área para imagem do Feral</p>
+                  </div>
                 )}
-                <label><span>URL da imagem</span><input onChange={(event) => update("imagemUrl", event.target.value)} placeholder="https://..." type="url" value={draft.imagemUrl} /></label>
+                <label>
+                  <span>URL da imagem</span>
+                  <input
+                    onChange={(event) =>
+                      update("imagemUrl", event.target.value)
+                    }
+                    placeholder="https://..."
+                    type="url"
+                    value={draft.imagemUrl}
+                  />
+                </label>
               </div>
             </div>
 
-            <div className="profile-section-title"><span>01</span><h2>Natureza do Feral</h2></div>
+            <div className="profile-section-title">
+              <span>01</span>
+              <h2>Natureza do Feral</h2>
+            </div>
             <div className="profile-text-grid">
-              <label><span>Você é</span><textarea onChange={(event) => update("voceE", event.target.value)} rows={3} value={draft.voceE} /></label>
-              <label><span>Mas você tenta ser</span><textarea onChange={(event) => update("tentaSer", event.target.value)} rows={3} value={draft.tentaSer} /></label>
-              <label className="profile-field-wide"><span>Feras familiares</span><textarea onChange={(event) => update("ferasFamiliares", event.target.value)} rows={3} value={draft.ferasFamiliares} /></label>
-              <label><span>Prato típico</span><input onChange={(event) => update("pratoTipico", event.target.value)} value={draft.pratoTipico} /></label>
-              <label><span>Tempero típico</span><input onChange={(event) => update("temperoTipico", event.target.value)} value={draft.temperoTipico} /></label>
+              <label>
+                <span>Você é</span>
+                <textarea
+                  onChange={(event) => update("voceE", event.target.value)}
+                  rows={3}
+                  value={draft.voceE}
+                />
+              </label>
+              <label>
+                <span>Mas você tenta ser</span>
+                <textarea
+                  onChange={(event) => update("tentaSer", event.target.value)}
+                  rows={3}
+                  value={draft.tentaSer}
+                />
+              </label>
+              <label className="profile-field-wide">
+                <span>Feras familiares</span>
+                <textarea
+                  onChange={(event) =>
+                    update("ferasFamiliares", event.target.value)
+                  }
+                  rows={3}
+                  value={draft.ferasFamiliares}
+                />
+              </label>
+              <label>
+                <span>Prato típico</span>
+                <input
+                  onChange={(event) =>
+                    update("pratoTipico", event.target.value)
+                  }
+                  value={draft.pratoTipico}
+                />
+              </label>
+              <label>
+                <span>Tempero típico</span>
+                <input
+                  onChange={(event) =>
+                    update("temperoTipico", event.target.value)
+                  }
+                  value={draft.temperoTipico}
+                />
+              </label>
             </div>
 
-            <div className="profile-section-title"><span>02</span><h2>História e vínculos</h2></div>
+            <div className="profile-section-title">
+              <span>02</span>
+              <h2>História e vínculos</h2>
+            </div>
             <div className="profile-text-grid">
-              <label><span>Infância e criação</span><textarea onChange={(event) => update("infanciaCriacao", event.target.value)} rows={4} value={draft.infanciaCriacao} /></label>
-              <label><span>Iniciação como Feral</span><textarea onChange={(event) => update("iniciacaoComoFeral", event.target.value)} rows={4} value={draft.iniciacaoComoFeral} /></label>
-              <label><span>Ambição</span><textarea onChange={(event) => update("ambicao", event.target.value)} rows={4} value={draft.ambicao} /></label>
-              <label><span>Conexão</span><textarea onChange={(event) => update("conexao", event.target.value)} rows={4} value={draft.conexao} /></label>
+              <label>
+                <span>Infância e criação</span>
+                <textarea
+                  onChange={(event) =>
+                    update("infanciaCriacao", event.target.value)
+                  }
+                  rows={4}
+                  value={draft.infanciaCriacao}
+                />
+              </label>
+              <label>
+                <span>Iniciação como Feral</span>
+                <textarea
+                  onChange={(event) =>
+                    update("iniciacaoComoFeral", event.target.value)
+                  }
+                  rows={4}
+                  value={draft.iniciacaoComoFeral}
+                />
+              </label>
+              <label>
+                <span>Ambição</span>
+                <textarea
+                  onChange={(event) => update("ambicao", event.target.value)}
+                  rows={4}
+                  value={draft.ambicao}
+                />
+              </label>
+              <label>
+                <span>Conexão</span>
+                <textarea
+                  onChange={(event) => update("conexao", event.target.value)}
+                  rows={4}
+                  value={draft.conexao}
+                />
+              </label>
             </div>
 
-            {error && <p className="hub-feedback error" role="alert">{error}</p>}
-            {message && <p className="hub-feedback success" role="status">{message}</p>}
+            {error && (
+              <p className="hub-feedback error" role="alert">
+                {error}
+              </p>
+            )}
+            {message && (
+              <p className="hub-feedback success" role="status">
+                {message}
+              </p>
+            )}
 
             <div className="profile-form-actions">
               <Link href="/fichas">CANCELAR</Link>
-              <button disabled={saving} type="submit">{saving ? "SALVANDO..." : "SALVAR ALTERAÇÕES"}</button>
+              <button disabled={saving} type="submit">
+                {saving ? "SALVANDO..." : "SALVAR ALTERAÇÕES"}
+              </button>
             </div>
           </form>
         )}
 
-        {error && ferais.length === 0 && <p className="hub-feedback error" role="alert">{error}</p>}
+        {error && ferais.length === 0 && (
+          <p className="hub-feedback error" role="alert">
+            {error}
+          </p>
+        )}
       </section>
     </DashboardShell>
   );

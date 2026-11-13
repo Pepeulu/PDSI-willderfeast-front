@@ -1,0 +1,2 @@
+# Mantém a formatação em LF em checkouts de diferentes sistemas.
+* text=auto eol=lf

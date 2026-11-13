@@ -1,3 +1,7 @@
+/**
+ * Catálogo de monstros da API com pesquisa pelos atributos disponíveis.
+ * @module app/bestiario
+ */
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
@@ -5,8 +9,10 @@ import { getApiErrorMessage, getMonstros, Monstro } from "@/lib/api";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+/** Coordenadas dos quatro recortes da imagem usada nos cartões. */
 const monsterPositions = ["0% 0%", "100% 0%", "0% 100%", "100% 100%"];
 
+/** Reserva a posição de um cartão durante a consulta ao bestiário. */
 function MonsterSkeleton() {
   return (
     <article aria-hidden="true" className="bestiary-card bestiary-skeleton">
@@ -17,7 +23,14 @@ function MonsterSkeleton() {
   );
 }
 
-function MonsterApiCard({ monster, index }: { monster: Monstro; index: number }) {
+/** Mostra o resumo do monstro e oferece acesso ao registro completo. */
+function MonsterApiCard({
+  monster,
+  index,
+}: {
+  monster: Monstro;
+  index: number;
+}) {
   const vigor = Math.max(
     0,
     Math.min(100, (monster.vigor_atual / monster.vigor_base) * 100),
@@ -54,6 +67,7 @@ function MonsterApiCard({ monster, index }: { monster: Monstro; index: number })
   );
 }
 
+/** Consulta o catálogo e apresenta os registros que correspondem à busca. */
 export default function Bestiario() {
   const [monsters, setMonsters] = useState<Monstro[]>([]);
   const [query, setQuery] = useState("");
@@ -86,6 +100,7 @@ export default function Bestiario() {
     };
   }, []);
 
+  /** Permite buscar por nome, categoria, habitat ou dieta sem distinguir maiúsculas. */
   const visibleMonsters = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
     if (!normalized) return monsters;

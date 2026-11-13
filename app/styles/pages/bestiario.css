@@ -1,3 +1,5 @@
+/* Organiza a grade do bestiário e os detalhes de cada besta. */
+
 .figma-monster-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

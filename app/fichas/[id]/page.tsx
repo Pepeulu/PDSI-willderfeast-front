@@ -1,3 +1,7 @@
+/**
+ * Rota dinâmica para criação, consulta e exclusão de fichas de Feral.
+ * @module app/fichas/[id]
+ */
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
@@ -13,6 +17,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
+/** Valores editáveis da nova ficha antes da conversão para o formato da API. */
 type FeralForm = {
   nome: string;
   titulo: string;
@@ -31,6 +36,7 @@ type FeralForm = {
   conexao: string;
 };
 
+/** Configuração de um campo de texto, com rótulo, restrições e largura opcional. */
 type TextFieldConfig = {
   field: keyof FeralForm;
   label: string;
@@ -40,6 +46,7 @@ type TextFieldConfig = {
   wide?: boolean;
 };
 
+/** Valores iniciais de criação, com vigor atual e máximo iguais a 10. */
 const initialForm: FeralForm = {
   nome: "",
   titulo: "",
@@ -58,6 +65,7 @@ const initialForm: FeralForm = {
   conexao: "",
 };
 
+/** Campos de identificação e retrato do personagem. */
 const identityFields: TextFieldConfig[] = [
   {
     field: "nome",
@@ -86,6 +94,7 @@ const identityFields: TextFieldConfig[] = [
   },
 ];
 
+/** Campos sobre a identidade narrativa e as preferências culinárias do Feral. */
 const profileFields: TextFieldConfig[] = [
   {
     field: "voceE",
@@ -117,6 +126,7 @@ const profileFields: TextFieldConfig[] = [
   },
 ];
 
+/** Campos narrativos de origem, ambição e vínculos. */
 const historyFields: TextFieldConfig[] = [
   {
     field: "infanciaCriacao",
@@ -140,11 +150,13 @@ const historyFields: TextFieldConfig[] = [
   },
 ];
 
+/** Converte texto em branco em nulo e remove espaços das extremidades. */
 function optionalValue(value: string) {
   const trimmed = value.trim();
   return trimmed || null;
 }
 
+/** Renderiza o cabeçalho numerado de uma seção do formulário. */
 function SectionHeading({
   number,
   title,
@@ -165,16 +177,19 @@ function SectionHeading({
   );
 }
 
+/** Apresenta o formulário e envia à API uma ficha com dados válidos. */
 function CreateCharacterSheet() {
   const router = useRouter();
   const [form, setForm] = useState<FeralForm>(initialForm);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /** Copia o formulário com o novo valor do campo editado. */
   function updateField(field: keyof FeralForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  /** Renderiza um campo controlado a partir da configuração da seção. */
   function renderTextField(config: TextFieldConfig) {
     return (
       <label
@@ -195,6 +210,7 @@ function CreateCharacterSheet() {
     );
   }
 
+  /** Valida nome e vigor, cria a ficha e retorna à listagem após a confirmação da API. */
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -344,7 +360,11 @@ function CreateCharacterSheet() {
                       updateField(config.field, event.target.value)
                     }
                     placeholder={config.placeholder}
-                    rows={config.field === "ambicao" || config.field === "conexao" ? 3 : 4}
+                    rows={
+                      config.field === "ambicao" || config.field === "conexao"
+                        ? 3
+                        : 4
+                    }
                     value={form[config.field]}
                   />
                 </label>
@@ -376,6 +396,7 @@ function CreateCharacterSheet() {
   );
 }
 
+/** Mostra o valor do campo de ficha ou a indicação de que ele está vazio. */
 function SheetField({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="api-sheet-field">
@@ -385,6 +406,7 @@ function SheetField({ label, value }: { label: string; value: string | null }) {
   );
 }
 
+/** Consulta uma ficha existente e oferece ações para editá-la ou excluí-la. */
 function CharacterSheetDetail({ id }: { id: number }) {
   const router = useRouter();
   const [feral, setFeral] = useState<Feral | null>(null);
@@ -407,7 +429,10 @@ function CharacterSheetDetail({ id }: { id: number }) {
         }
         if (active) {
           setError(
-            getApiErrorMessage(requestError, "Não foi possível carregar a ficha."),
+            getApiErrorMessage(
+              requestError,
+              "Não foi possível carregar a ficha.",
+            ),
           );
         }
       })
@@ -420,8 +445,12 @@ function CharacterSheetDetail({ id }: { id: number }) {
     };
   }, [id, router]);
 
+  /** Pede confirmação antes da exclusão e volta à listagem após o sucesso. */
   async function removeSheet() {
-    if (!feral || !window.confirm(`Excluir definitivamente a ficha de ${feral.nome}?`)) {
+    if (
+      !feral ||
+      !window.confirm(`Excluir definitivamente a ficha de ${feral.nome}?`)
+    ) {
       return;
     }
 
@@ -449,7 +478,9 @@ function CharacterSheetDetail({ id }: { id: number }) {
 
         {loading ? (
           <div className="profile-loading" aria-label="Carregando ficha">
-            <span /><span /><span />
+            <span />
+            <span />
+            <span />
           </div>
         ) : error && !feral ? (
           <div className="hub-empty-state api-sheet-error">
@@ -472,46 +503,76 @@ function CharacterSheetDetail({ id }: { id: number }) {
                 <h1>{feral.nome}</h1>
                 <h2>{feral.titulo || "Feral sem título"}</h2>
                 <div className="api-sheet-badges">
-                  <span>{feral.especialidade || "Especialidade não definida"}</span>
-                  <span>VIGOR {feral.vigor_atual} / {feral.vigor_max}</span>
+                  <span>
+                    {feral.especialidade || "Especialidade não definida"}
+                  </span>
+                  <span>
+                    VIGOR {feral.vigor_atual} / {feral.vigor_max}
+                  </span>
                 </div>
                 <div className="api-sheet-vigor">
                   <i
                     style={{
                       width: `${Math.max(
                         0,
-                        Math.min(100, (feral.vigor_atual / feral.vigor_max) * 100),
+                        Math.min(
+                          100,
+                          (feral.vigor_atual / feral.vigor_max) * 100,
+                        ),
                       )}%`,
                     }}
                   />
                 </div>
                 <div className="api-sheet-actions">
                   <Link href={`/perfil?feral=${feral.id}`}>EDITAR PERFIL</Link>
-                  <button disabled={deleting} onClick={removeSheet} type="button">
+                  <button
+                    disabled={deleting}
+                    onClick={removeSheet}
+                    type="button"
+                  >
                     {deleting ? "EXCLUINDO..." : "EXCLUIR FICHA"}
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="profile-section-title"><span>01</span><h2>Natureza do Feral</h2></div>
+            <div className="profile-section-title">
+              <span>01</span>
+              <h2>Natureza do Feral</h2>
+            </div>
             <div className="api-sheet-field-grid">
               <SheetField label="Você é" value={feral.voce_e} />
               <SheetField label="Mas você tenta ser" value={feral.tenta_ser} />
-              <SheetField label="Feras familiares" value={feral.feras_familiares} />
+              <SheetField
+                label="Feras familiares"
+                value={feral.feras_familiares}
+              />
               <SheetField label="Prato típico" value={feral.prato_tipico} />
               <SheetField label="Tempero típico" value={feral.tempero_tipico} />
             </div>
 
-            <div className="profile-section-title"><span>02</span><h2>História e vínculos</h2></div>
+            <div className="profile-section-title">
+              <span>02</span>
+              <h2>História e vínculos</h2>
+            </div>
             <div className="api-sheet-history">
-              <SheetField label="Infância e criação" value={feral.infancia_criacao} />
-              <SheetField label="Iniciação como Feral" value={feral.iniciacao_como_feral} />
+              <SheetField
+                label="Infância e criação"
+                value={feral.infancia_criacao}
+              />
+              <SheetField
+                label="Iniciação como Feral"
+                value={feral.iniciacao_como_feral}
+              />
               <SheetField label="Ambição" value={feral.ambicao} />
               <SheetField label="Conexão" value={feral.conexao} />
             </div>
 
-            {error && <p className="hub-feedback error" role="alert">{error}</p>}
+            {error && (
+              <p className="hub-feedback error" role="alert">
+                {error}
+              </p>
+            )}
           </>
         ) : null}
       </section>
@@ -519,6 +580,7 @@ function CharacterSheetDetail({ id }: { id: number }) {
   );
 }
 
+/** Seleciona o formulário de criação ou o detalhe de uma ficha pela rota. */
 export default function Sheet() {
   const params = useParams<{ id: string }>();
 

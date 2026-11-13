@@ -1,3 +1,5 @@
+/* Reúne o layout e os estados das páginas internas do painel. */
+
 .hub-page {
   width: 100%;
   max-width: 1200px;
@@ -272,7 +274,12 @@
 .bestiary-skeleton::after {
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 6%), transparent 70%);
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgb(255 255 255 / 6%),
+    transparent 70%
+  );
   content: "";
   animation: hub-shimmer 1.35s infinite;
 }
@@ -374,7 +381,16 @@
     inset 0 0 0 4px #e28aa0,
     inset 0 0 0 23px rgb(9 20 35 / 32%),
     0 18px 35px rgb(0 0 0 / 28%);
-  clip-path: polygon(50% 0, 86% 11%, 100% 48%, 78% 91%, 50% 100%, 22% 91%, 0 48%, 14% 11%);
+  clip-path: polygon(
+    50% 0,
+    86% 11%,
+    100% 48%,
+    78% 91%,
+    50% 100%,
+    22% 91%,
+    0 48%,
+    14% 11%
+  );
 }
 
 .faceted-die b {
@@ -812,8 +828,12 @@
 }
 
 @keyframes profile-shimmer {
-  from { background-position: 100% 0; }
-  to { background-position: -100% 0; }
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 }
 
 .profile-empty {
@@ -1448,8 +1468,12 @@
 }
 
 @keyframes hub-shimmer {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(100%); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 @media (max-width: 1040px) {

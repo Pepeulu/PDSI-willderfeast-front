@@ -1,3 +1,4 @@
+/** Isola o DOM, o armazenamento local e as substituições de cada teste. */
 import { afterEach, vi } from "vitest";
 
 if (typeof document !== "undefined") {

@@ -1,5 +1,13 @@
+/**
+ * Cartão de exemplo para a listagem do bestiário.
+ * @module
+ */
+
 import Link from "next/link";
+
+/** Renderiza a miniatura e o link da besta identificada pelo índice. */
 export default function MonsterCard({ index = 0 }: { index?: number }) {
+  /** Nomes usados como rótulos acessíveis das miniaturas. */
   const names = [
     "Hagsechu",
     "Mammudo",
@@ -8,6 +16,7 @@ export default function MonsterCard({ index = 0 }: { index?: number }) {
     "Tatzelwurm",
     "Batu",
   ];
+  /** Coordenadas de recorte das miniaturas, na mesma ordem dos nomes. */
   const positions = [
     "0% 0%",
     "100% 0%",
@@ -18,7 +27,6 @@ export default function MonsterCard({ index = 0 }: { index?: number }) {
   ];
   return (
     <Link href={`/bestiario/${index + 1}`} className="monster-card">
-
       <div
         className="monster-image"
         role="img"
@@ -31,7 +39,6 @@ export default function MonsterCard({ index = 0 }: { index?: number }) {
       <small>
         {index % 2 ? "É muito difícil de caçar" : "Faz isso e aquilo"}
       </small>
-      
     </Link>
   );
 }

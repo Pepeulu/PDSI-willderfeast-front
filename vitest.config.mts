@@ -1,3 +1,4 @@
+/** Configura a execução dos testes e a cobertura de 100% por arquivo de código executável. */
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 

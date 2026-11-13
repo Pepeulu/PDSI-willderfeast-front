@@ -1,12 +1,16 @@
+/** @file Configuração de build e desenvolvimento do Next.js. */
+
+/** Detecta projetos em pastas sincronizadas pelo OneDrive no Windows. */
 const runningInsideWindowsOneDrive =
   process.platform === "win32" &&
   process.cwd().toLocaleLowerCase().includes("\\onedrive\\");
 
-/** @type {import('next').NextConfig} */
+/**
+ * Usa um diretório dedicado ao cache local do Next em projetos no OneDrive.
+ * É possível apontar `.next-local` para uma pasta fora da sincronização por meio de uma junção do Windows.
+ * @type {import('next').NextConfig}
+ */
 const nextConfig = {
-  // O OneDrive transforma arquivos do cache do Next em reparse points e causa
-  // EINVAL/ENOTDIR no Windows. Localmente o build fica fora da pasta sincronizada;
-  // na Vercel e nos demais ambientes o diretório padrão continua sendo usado.
   distDir: runningInsideWindowsOneDrive ? ".next-local" : ".next",
 };
 

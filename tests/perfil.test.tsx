@@ -1,9 +1,21 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+/**
+ * Verifica o carregamento, a seleção e a edição do perfil de um feral.
+ * @module
+ */
+
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Perfil from "@/app/perfil/page";
 import { ApiError, getMyFerais, updateFeral, type Feral } from "@/lib/api";
 
+/** Registra as mudanças de rota quando uma sessão expira. */
 const router = vi.hoisted(() => ({ replace: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
@@ -13,11 +25,12 @@ vi.mock("@/components/DashboardShell", () => ({
 }));
 
 vi.mock("@/lib/api", async (importOriginal) => ({
-  ...await importOriginal<typeof import("@/lib/api")>(),
+  ...(await importOriginal<typeof import("@/lib/api")>()),
   getMyFerais: vi.fn(),
   updateFeral: vi.fn(),
 }));
 
+/** Ficha com todos os campos editáveis preenchidos. */
 const feral: Feral = {
   id: 7,
   usuario_id: 2,
@@ -38,6 +51,7 @@ const feral: Feral = {
   conexao: "Naila",
 };
 
+/** Segunda ficha com os campos opcionais ausentes. */
 const feralWithoutProfile: Feral = {
   ...feral,
   id: 8,
@@ -56,14 +70,18 @@ const feralWithoutProfile: Feral = {
   conexao: null,
 };
 
+/** Altera um campo do formulário a partir do seu rótulo. */
 function changeField(label: string, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 }
 
+/** Abre o perfil com as fichas fornecidas e aguarda o formulário de edição. */
 async function openProfile(...ferais: Feral[]) {
   vi.mocked(getMyFerais).mockResolvedValue(ferais);
   const view = render(<Perfil />);
-  const saveButton = await screen.findByRole("button", { name: "SALVAR ALTERAÇÕES" });
+  const saveButton = await screen.findByRole("button", {
+    name: "SALVAR ALTERAÇÕES",
+  });
   return { ...view, saveButton };
 }
 
@@ -78,8 +96,14 @@ describe("carregamento do perfil", () => {
     render(<Perfil />);
 
     expect(screen.getByLabelText("Carregando perfil")).toBeTruthy();
-    expect(await screen.findByRole("heading", { name: "Você ainda não possui um Feral" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "CRIAR FICHA" }).getAttribute("href")).toBe("/fichas/novo");
+    expect(
+      await screen.findByRole("heading", {
+        name: "Você ainda não possui um Feral",
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "CRIAR FICHA" }).getAttribute("href"),
+    ).toBe("/fichas/novo");
     expect(screen.queryByLabelText("Feral ativo")).toBeNull();
   });
 
@@ -91,27 +115,53 @@ describe("carregamento do perfil", () => {
     expect(selector.value).toBe("8");
     expect(screen.getByLabelText<HTMLInputElement>("Título").value).toBe("");
     expect(screen.getByText("Área para imagem do Feral")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "VER FICHA COMPLETA" }).getAttribute("href")).toBe("/fichas/8");
+    expect(
+      screen
+        .getByRole("link", { name: "VER FICHA COMPLETA" })
+        .getAttribute("href"),
+    ).toBe("/fichas/8");
 
     changeField("Feral ativo", "7");
     expect(selector.value).toBe("7");
-    expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe("Askell");
-    expect(screen.getByLabelText<HTMLInputElement>("Título").value).toBe("O Alquímico");
-    expect(screen.getByRole("img", { name: "Imagem de Askell" }).getAttribute("src")).toBe(feral.imagem_url);
-    expect(screen.getByRole("link", { name: "VER FICHA COMPLETA" }).getAttribute("href")).toBe("/fichas/7");
+    expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe(
+      "Askell",
+    );
+    expect(screen.getByLabelText<HTMLInputElement>("Título").value).toBe(
+      "O Alquímico",
+    );
+    expect(
+      screen.getByRole("img", { name: "Imagem de Askell" }).getAttribute("src"),
+    ).toBe(feral.imagem_url);
+    expect(
+      screen
+        .getByRole("link", { name: "VER FICHA COMPLETA" })
+        .getAttribute("href"),
+    ).toBe("/fichas/7");
 
     changeField("Feral ativo", "99");
-    expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe("Askell");
-    expect(screen.getByRole("link", { name: "VER FICHA COMPLETA" }).getAttribute("href")).toBe("/fichas/7");
+    expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe(
+      "Askell",
+    );
+    expect(
+      screen
+        .getByRole("link", { name: "VER FICHA COMPLETA" })
+        .getAttribute("href"),
+    ).toBe("/fichas/7");
   });
 
   it("mostra a falha de carregamento e impede salvar sem Feral ativo", async () => {
     vi.mocked(getMyFerais).mockRejectedValue(new Error("Falha de rede"));
     render(<Perfil />);
-    const saveButton = await screen.findByRole("button", { name: "SALVAR ALTERAÇÕES" });
+    const saveButton = await screen.findByRole("button", {
+      name: "SALVAR ALTERAÇÕES",
+    });
 
-    expect(screen.getAllByRole("alert").map((alert) => alert.textContent)).toContain("Não foi possível carregar o perfil.");
-    expect(screen.queryByRole("link", { name: "VER FICHA COMPLETA" })).toBeNull();
+    expect(
+      screen.getAllByRole("alert").map((alert) => alert.textContent),
+    ).toContain("Não foi possível carregar o perfil.");
+    expect(
+      screen.queryByRole("link", { name: "VER FICHA COMPLETA" }),
+    ).toBeNull();
     changeField("Nome *", "Askell");
     changeField("Vigor atual *", "5");
     changeField("Vigor máximo *", "10");
@@ -122,30 +172,44 @@ describe("carregamento do perfil", () => {
 
   it("limpa a sessão e preserva a rota de retorno se a consulta recebe 401", async () => {
     localStorage.setItem("wilderfeast_user", "usuario");
-    vi.mocked(getMyFerais).mockRejectedValue(new ApiError("Sessão expirada", 401));
+    vi.mocked(getMyFerais).mockRejectedValue(
+      new ApiError("Sessão expirada", 401),
+    );
     render(<Perfil />);
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledExactlyOnceWith("/login?next=/perfil"));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledExactlyOnceWith(
+        "/login?next=/perfil",
+      ),
+    );
     expect(localStorage.getItem("wilderfeast_user")).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it.each(["sucesso", "erro"])("ignora o %s de uma consulta de uma página já fechada", async (outcome) => {
-    let settle!: () => void;
-    vi.mocked(getMyFerais).mockReturnValueOnce(new Promise((resolve, reject) => {
-      settle = outcome === "sucesso"
-        ? () => resolve([feral])
-        : () => reject(new Error("Falha na primeira consulta"));
-    }));
-    const originalView = render(<Perfil />);
+  it.each(["sucesso", "erro"])(
+    "ignora o %s de uma consulta de uma página já fechada",
+    async (outcome) => {
+      let settle!: () => void;
+      vi.mocked(getMyFerais).mockReturnValueOnce(
+        new Promise((resolve, reject) => {
+          settle =
+            outcome === "sucesso"
+              ? () => resolve([feral])
+              : () => reject(new Error("Falha na primeira consulta"));
+        }),
+      );
+      const originalView = render(<Perfil />);
 
-    originalView.unmount();
-    await openProfile(feralWithoutProfile);
-    await act(async () => settle());
+      originalView.unmount();
+      await openProfile(feralWithoutProfile);
+      await act(async () => settle());
 
-    expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe("Naila");
-    expect(screen.queryByRole("alert")).toBeNull();
-  });
+      expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe(
+        "Naila",
+      );
+      expect(screen.queryByRole("alert")).toBeNull();
+    },
+  );
 });
 
 describe("edição do perfil", () => {
@@ -172,7 +236,11 @@ describe("edição do perfil", () => {
 
   it("envia todos os campos, atualiza apenas o Feral escolhido e recarrega os valores devolvidos", async () => {
     let finish!: (data: Feral) => void;
-    vi.mocked(updateFeral).mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+    vi.mocked(updateFeral).mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
     const { saveButton } = await openProfile(feral, feralWithoutProfile);
 
     changeField("Nome *", "");
@@ -180,8 +248,8 @@ describe("edição do perfil", () => {
 
     const edits = {
       "Nome *": "  Astrid  ",
-      "Título": "  Desbravadora  ",
-      "Especialidade": "  Cozinha  ",
+      Título: "  Desbravadora  ",
+      Especialidade: "  Cozinha  ",
       "Vigor atual *": "0",
       "Vigor máximo *": "12",
       "URL da imagem": "https://example.com/astrid.jpg",
@@ -192,8 +260,8 @@ describe("edição do perfil", () => {
       "Tempero típico": "  Sal  ",
       "Infância e criação": "  No litoral  ",
       "Iniciação como Feral": "  Treinou em alto mar  ",
-      "Ambição": "  Atravessar o oceano  ",
-      "Conexão": "   ",
+      Ambição: "  Atravessar o oceano  ",
+      Conexão: "   ",
     };
 
     for (const [label, value] of Object.entries(edits)) {
@@ -219,26 +287,44 @@ describe("edição do perfil", () => {
       voce_e: "Uma viajante",
     };
     expect(updateFeral).toHaveBeenCalledExactlyOnceWith(7, payload);
-    expect(screen.getByRole("button", { name: "SALVANDO..." }).hasAttribute("disabled")).toBe(true);
+    expect(
+      screen
+        .getByRole("button", { name: "SALVANDO..." })
+        .hasAttribute("disabled"),
+    ).toBe(true);
 
-    await act(async () => finish({ ...feral, ...payload, nome: "Astrid da Costa" }));
+    await act(async () =>
+      finish({ ...feral, ...payload, nome: "Astrid da Costa" }),
+    );
 
-    expect(screen.getByRole("status").textContent).toBe("Perfil atualizado com sucesso na API.");
-    expect(screen.getByRole("option", { name: "Astrid da Costa" })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toBe(
+      "Perfil atualizado com sucesso na API.",
+    );
+    expect(
+      screen.getByRole("option", { name: "Astrid da Costa" }),
+    ).toBeTruthy();
     expect(screen.getByRole("option", { name: "Naila" })).toBeTruthy();
-    expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe("Astrid da Costa");
-    expect(screen.getByLabelText<HTMLTextAreaElement>("Conexão").value).toBe("");
+    expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe(
+      "Astrid da Costa",
+    );
+    expect(screen.getByLabelText<HTMLTextAreaElement>("Conexão").value).toBe(
+      "",
+    );
 
     changeField("Feral ativo", "8");
     expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("mantém a edição disponível e exibe a falha quando o salvamento dá erro", async () => {
-    vi.mocked(updateFeral).mockRejectedValue(new ApiError("Erro ao atualizar os dados", 400));
+    vi.mocked(updateFeral).mockRejectedValue(
+      new ApiError("Erro ao atualizar os dados", 400),
+    );
     const { saveButton } = await openProfile(feral, feralWithoutProfile);
     fireEvent.click(saveButton);
 
-    expect((await screen.findByRole("alert")).textContent).toBe("Erro ao atualizar os dados");
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Erro ao atualizar os dados",
+    );
     expect(saveButton.hasAttribute("disabled")).toBe(false);
     expect(screen.queryByRole("status")).toBeNull();
 
@@ -248,11 +334,17 @@ describe("edição do perfil", () => {
 
   it("limpa a sessão e preserva o Feral ativo no redirecionamento se o salvamento recebe 401", async () => {
     localStorage.setItem("wilderfeast_user", "usuario");
-    vi.mocked(updateFeral).mockRejectedValue(new ApiError("Sessão expirada", 401));
+    vi.mocked(updateFeral).mockRejectedValue(
+      new ApiError("Sessão expirada", 401),
+    );
     const { saveButton } = await openProfile(feral);
     fireEvent.click(saveButton);
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledExactlyOnceWith("/login?next=/perfil?feral=7"));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledExactlyOnceWith(
+        "/login?next=/perfil?feral=7",
+      ),
+    );
     expect(localStorage.getItem("wilderfeast_user")).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
   });

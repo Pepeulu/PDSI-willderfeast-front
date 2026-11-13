@@ -1,17 +1,19 @@
 "use client";
 
+/**
+ * Estrutura compartilhada das páginas autenticadas do painel.
+ * @module
+ */
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
+/** Seções que podem ser destacadas no menu lateral. */
 export type DashboardSection =
-  | "inicio"
-  | "fichas"
-  | "utensilios"
-  | "bestiario"
-  | "dados"
-  | "perfil";
+  "inicio" | "fichas" | "utensilios" | "bestiario" | "dados" | "perfil";
 
+/** Seção ativa, conteúdo e classes opcionais de cada página. */
 type DashboardShellProps = {
   active: DashboardSection;
   children: ReactNode;
@@ -19,10 +21,13 @@ type DashboardShellProps = {
   dashboardClassName?: string;
 };
 
+/** Ilustração exibida ao lado do nome do usuário no painel. */
 const profileAvatar =
   "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Qiyana_0.jpg";
 
+/** Renderiza o ícone decorativo da seção ou da ação de sair. */
 function NavigationIcon({ name }: { name: DashboardSection | "sair" }) {
+  /** Atributos de apresentação e acessibilidade compartilhados pelos ícones. */
   const common = {
     "aria-hidden": true,
     className: "sidebar-nav-icon",
@@ -99,6 +104,7 @@ function NavigationIcon({ name }: { name: DashboardSection | "sair" }) {
   );
 }
 
+/** Define a ordem, os rótulos e os destinos do menu principal. */
 const navigation: Array<{
   href: string;
   label: string;
@@ -111,6 +117,7 @@ const navigation: Array<{
   { href: "/dados", label: "Rolagem de Dados", section: "dados" },
 ];
 
+/** Exibe o menu lateral, identifica a seção ativa e apresenta o conteúdo da página. */
 export default function DashboardShell({
   active,
   children,
@@ -121,6 +128,7 @@ export default function DashboardShell({
   const [collapsed, setCollapsed] = useState(false);
   const [userName, setUserName] = useState("FERAL");
 
+  // Restaura as preferências e a identidade salvas no navegador após a montagem.
   useEffect(() => {
     setCollapsed(
       localStorage.getItem("wilderfeast_sidebar_collapsed") === "true",
@@ -138,14 +146,14 @@ export default function DashboardShell({
     }
   }, []);
 
+  /** Alterna o menu lateral e grava a preferência para a próxima visita. */
   function toggleSidebar() {
-    setCollapsed((current) => {
-      const next = !current;
-      localStorage.setItem("wilderfeast_sidebar_collapsed", String(next));
-      return next;
-    });
+    const next = !collapsed;
+    localStorage.setItem("wilderfeast_sidebar_collapsed", String(next));
+    setCollapsed(next);
   }
 
+  /** Encerra a sessão, apaga a identidade local e volta ao login. */
   async function logout() {
     await fetch("/api/session", { method: "DELETE" });
     localStorage.removeItem("wilderfeast_user");
@@ -209,7 +217,9 @@ export default function DashboardShell({
         </div>
       </aside>
 
-      <main className={`home-content ${contentClassName}`.trim()}>{children}</main>
+      <main className={`home-content ${contentClassName}`.trim()}>
+        {children}
+      </main>
     </div>
   );
 }
