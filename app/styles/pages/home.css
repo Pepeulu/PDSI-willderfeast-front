@@ -761,7 +761,7 @@
 .utensil-card {
   position: relative;
   display: grid;
-  width: 726px;
+  width: 776px;
   height: 374px;
   grid-template-columns: 326px 334px;
   gap: 0;
@@ -882,7 +882,7 @@
 
 .utensil-stats {
   display: flex;
-  gap: 16px;
+  gap: 13px;
   padding-top: 9px;
 }
 
