@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /** Páginas que podem ser abertas antes do login. */
-const publicPaths = new Set(["/login", "/cadastro"]);
+const publicPaths = new Set(["/login", "/cadastro" ]);
 
 /** Libera páginas públicas e preserva o destino original ao redirecionar para o login. */
 export function middleware(request: NextRequest) {
