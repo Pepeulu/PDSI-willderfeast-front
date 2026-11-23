@@ -6,66 +6,8 @@
 
 import DashboardShell from "@/components/DashboardShell";
 import { getApiErrorMessage, getMonstros, Monstro } from "@/lib/api";
-import Link from "next/link";
+import { MonsterApiCard, MonsterSkeleton } from "@/components/MonsterApiCard";
 import { useEffect, useMemo, useState } from "react";
-
-/** Coordenadas dos quatro recortes da imagem usada nos cartões. */
-const monsterPositions = ["0% 0%", "100% 0%", "0% 100%", "100% 100%"];
-
-/** Reserva a posição de um cartão durante a consulta ao bestiário. */
-function MonsterSkeleton() {
-  return (
-    <article aria-hidden="true" className="bestiary-card bestiary-skeleton">
-      <span />
-      <i />
-      <i />
-    </article>
-  );
-}
-
-/** Mostra o resumo do monstro e oferece acesso ao registro completo. */
-function MonsterApiCard({
-  monster,
-  index,
-}: {
-  monster: Monstro;
-  index: number;
-}) {
-  const vigor = Math.max(
-    0,
-    Math.min(100, (monster.vigor_atual / monster.vigor_base) * 100),
-  );
-
-  return (
-    <Link className="bestiary-card" href={`/bestiario/${monster.id}`}>
-      <div className="bestiary-card-image">
-        <span
-          aria-label={`Ilustração de ${monster.nome}`}
-          role="img"
-          style={{
-            backgroundPosition:
-              monsterPositions[index % monsterPositions.length],
-          }}
-        />
-        <b>{monster.categoria}</b>
-      </div>
-      <div className="bestiary-card-copy">
-        <p>REGISTRO #{String(monster.id).padStart(3, "0")}</p>
-        <h2>{monster.nome}</h2>
-        <div className="bestiary-tags">
-          <span>{monster.habitat || "Habitat desconhecido"}</span>
-          <span>{monster.dieta || "Dieta desconhecida"}</span>
-        </div>
-        <small>
-          VIGOR {monster.vigor_atual} / {monster.vigor_base}
-        </small>
-        <div className="bestiary-vigor">
-          <i style={{ width: `${vigor}%` }} />
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 /** Consulta o catálogo e apresenta os registros que correspondem à busca. */
 export default function Bestiario() {
@@ -148,12 +90,8 @@ export default function Bestiario() {
             ? Array.from({ length: 6 }, (_, index) => (
                 <MonsterSkeleton key={index} />
               ))
-            : visibleMonsters.map((monster, index) => (
-                <MonsterApiCard
-                  index={index}
-                  key={monster.id}
-                  monster={monster}
-                />
+            : visibleMonsters.map((monster) => (
+                <MonsterApiCard key={monster.id} monster={monster} />
               ))}
         </div>
 

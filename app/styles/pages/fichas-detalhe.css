@@ -77,6 +77,51 @@
   gap: 24px;
 }
 
+.feral-photo-upload {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: #adc7f7;
+}
+
+.feral-photo-upload small {
+  color: #b5c4d9;
+}
+
+.feral-photo-upload input[type="file"] {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+}
+
+.feral-photo-selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.feral-photo-selection button {
+  border: 1px solid #8295af;
+  border-radius: 4px;
+  background: #152438;
+  color: #f1f5fb;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+.feral-step-progress {
+  margin: 0 0 -12px;
+  color: #ffb866;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .feral-form-section {
   overflow: hidden;
   border: 1px solid #43474e;
@@ -151,6 +196,7 @@
 }
 
 .feral-field input,
+.feral-field select,
 .feral-field textarea {
   width: 100%;
   border: 1px solid #43474e;
@@ -167,7 +213,8 @@
     box-shadow 180ms ease;
 }
 
-.feral-field input {
+.feral-field input,
+.feral-field select {
   min-height: 48px;
   padding: 11px 13px;
 }
@@ -185,11 +232,13 @@
 }
 
 .feral-field input:hover,
+.feral-field select:hover,
 .feral-field textarea:hover {
   border-color: #697282;
 }
 
 .feral-field input:focus,
+.feral-field select:focus,
 .feral-field textarea:focus {
   border-color: #adc7f7;
   background: #0e1929;
@@ -483,6 +532,7 @@
 @media (prefers-reduced-motion: reduce) {
   .feral-back-link,
   .feral-field input,
+  .feral-field select,
   .feral-field textarea,
   .feral-cancel-button,
   .feral-submit-button {

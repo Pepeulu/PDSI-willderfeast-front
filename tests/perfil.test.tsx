@@ -13,7 +13,18 @@ import {
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Perfil from "@/app/perfil/page";
-import { ApiError, getMyFerais, updateFeral, type Feral } from "@/lib/api";
+import {
+  ApiError,
+  enviarImagemFeral,
+  getMyFerais,
+  updateFeral,
+  type Feral,
+} from "@/lib/api";
+import {
+  feralAtivoId,
+  imagemFeralAtivo,
+  salvarFeralAtivo,
+} from "@/lib/feral-ativo";
 
 /** Registra as mudanças de rota quando uma sessão expira. */
 const router = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -27,6 +38,7 @@ vi.mock("@/components/DashboardShell", () => ({
 vi.mock("@/lib/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api")>()),
   getMyFerais: vi.fn(),
+  enviarImagemFeral: vi.fn(),
   updateFeral: vi.fn(),
 }));
 
@@ -113,6 +125,8 @@ describe("carregamento do perfil", () => {
 
     const selector = screen.getByLabelText<HTMLSelectElement>("Feral ativo");
     expect(selector.value).toBe("8");
+    expect(feralAtivoId()).toBe(8);
+    expect(imagemFeralAtivo()).toBe("");
     expect(screen.getByLabelText<HTMLInputElement>("Título").value).toBe("");
     expect(screen.getByText("Área para imagem do Feral")).toBeTruthy();
     expect(
@@ -123,6 +137,7 @@ describe("carregamento do perfil", () => {
 
     changeField("Feral ativo", "7");
     expect(selector.value).toBe("7");
+    expect(imagemFeralAtivo()).toBe(feral.imagem_url);
     expect(screen.getByLabelText<HTMLInputElement>("Nome *").value).toBe(
       "Askell",
     );
@@ -147,6 +162,38 @@ describe("carregamento do perfil", () => {
         .getByRole("link", { name: "VER FICHA COMPLETA" })
         .getAttribute("href"),
     ).toBe("/fichas/7");
+  });
+
+  it("salva a URL da foto hospedada e atualiza a imagem do Feral ativo", async () => {
+    const imagem_url = "https://imagem.test/perfil.webp";
+    const foto = new File(["foto"], "perfil.webp", { type: "image/webp" });
+    vi.mocked(enviarImagemFeral).mockResolvedValueOnce(imagem_url);
+    vi.mocked(updateFeral).mockResolvedValueOnce({ ...feral, imagem_url });
+    const { saveButton } = await openProfile(feral);
+    fireEvent.change(screen.getByLabelText("Imagem"), {
+      target: { files: [foto] },
+    });
+    fireEvent.click(saveButton);
+    await screen.findByText("Perfil atualizado com sucesso na API.");
+    expect(enviarImagemFeral).toHaveBeenCalledExactlyOnceWith(foto);
+    expect(updateFeral).toHaveBeenCalledWith(
+      feral.id,
+      expect.objectContaining({ imagem_url }),
+    );
+    expect(imagemFeralAtivo()).toBe(imagem_url);
+  });
+
+  it("lembra o Feral ativo e mostra o marcador para uma imagem inválida", async () => {
+    salvarFeralAtivo({ id: 8, nome: "Askell", imagem_url: "123123123" });
+    await openProfile(feral, {
+      ...feralWithoutProfile,
+      imagem_url: "123123123",
+    });
+    expect(screen.getByLabelText<HTMLSelectElement>("Feral ativo").value).toBe(
+      "8",
+    );
+    expect(screen.getByText("Área para imagem do Feral")).toBeTruthy();
+    expect(imagemFeralAtivo()).toBe("");
   });
 
   it("mostra a falha de carregamento e impede salvar sem Feral ativo", async () => {

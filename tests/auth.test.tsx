@@ -7,12 +7,6 @@ import Login from "@/app/login/page";
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock(
-  "@/assets_organizados_wilderfeast/05_ilustracoes_cenas/145.jpg",
-  () => ({
-    default: { src: "/auth-background.jpg" },
-  }),
-);
 
 const fetchSession = vi.fn<typeof fetch>();
 const email = "caçador@example.test";

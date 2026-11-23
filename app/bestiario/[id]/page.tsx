@@ -5,10 +5,15 @@
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
-import { getApiErrorMessage, getMonstro, Monstro } from "@/lib/api";
+import BeastIllustration from "@/components/BeastIllustration";
+import { getApiErrorMessage, getMonstro, MonstroDetalhado } from "@/lib/api";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+
+function percentual(atual: number, maximo: number) {
+  return maximo > 0 ? Math.max(0, Math.min(100, (atual / maximo) * 100)) : 0;
+}
 
 /** Apresenta um atributo e informa quando a API deixou o campo vazio. */
 function BeastInformation({
@@ -30,12 +35,15 @@ function BeastInformation({
 export default function BeastSheet() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
-  const [monster, setMonster] = useState<Monstro | null>(null);
+  const [monster, setMonster] = useState<MonstroDetalhado | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError("");
+    setMonster(null);
     if (!Number.isInteger(id) || id < 1) {
       setError("O identificador desse monstro é inválido.");
       setLoading(false);
@@ -90,11 +98,13 @@ export default function BeastSheet() {
         ) : monster ? (
           <>
             <div className="beast-api-hero">
-              <div
-                className="beast-api-image"
-                aria-label={`Ilustração de ${monster.nome}`}
-                role="img"
-              />
+              <div className="beast-api-image">
+                <BeastIllustration
+                  nome={monster.nome}
+                  imagemUrl={monster.imagem_url}
+                  destaque
+                />
+              </div>
               <div className="beast-api-heading">
                 <p>REGISTRO DE FERA · #{String(monster.id).padStart(3, "0")}</p>
                 <h1>{monster.nome}</h1>
@@ -109,7 +119,7 @@ export default function BeastSheet() {
                   <span>
                     <i
                       style={{
-                        width: `${Math.max(0, Math.min(100, (monster.vigor_atual / monster.vigor_base) * 100))}%`,
+                        width: `${percentual(monster.vigor_atual, monster.vigor_base)}%`,
                       }}
                     />
                   </span>
@@ -124,19 +134,94 @@ export default function BeastSheet() {
             </div>
             <div className="beast-information-list">
               <BeastInformation label="História" value={monster.historia} />
-              <BeastInformation label="Alvos" value={monster.alvos} />
+              <BeastInformation
+                label="Comportamento de caça"
+                value={monster.comportamento ?? monster.alvos}
+              />
               <BeastInformation label="Dieta" value={monster.dieta} />
               <BeastInformation label="Habitat" value={monster.habitat} />
             </div>
 
-            <div className="beast-api-footnote">
-              <span aria-hidden="true">◇</span>
-              <p>
-                Partes, condições e técnicas não fazem parte da resposta atual
-                do endpoint de monstros e, por isso, não são exibidas com dados
-                fictícios.
-              </p>
+            <div className="beast-stat-groups">
+              {(
+                [
+                  ["Estilos", monster.estilos],
+                  ["Habilidades", monster.habilidades],
+                ] as const
+              ).map(([titulo, pontos]) =>
+                pontos?.length ? (
+                  <section key={titulo} className="beast-detail-panel">
+                    <h2>{titulo}</h2>
+                    <dl className="beast-stat-grid">
+                      {pontos.map((p) => (
+                        <div key={p.nome}>
+                          <dt>{p.nome}</dt>
+                          <dd>{p.pontos ?? 0}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </section>
+                ) : null,
+              )}
             </div>
+            {monster.tracos?.length ? (
+              <section className="beast-detail-panel">
+                <h2>Traços</h2>
+                <dl className="beast-trait-grid">
+                  {monster.tracos.map((t) => (
+                    <div key={t.id} className="beast-detail-card">
+                      <dt>{t.nome}</dt>
+                      <dd>{t.descricao}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            ) : null}
+            {monster.partes?.length ? (
+              <section className="beast-detail-panel">
+                <h2>Partes e técnicas</h2>
+                <div className="beast-parts">
+                  {monster.partes.map((p) => (
+                    <article
+                      key={p.id}
+                      className="beast-detail-card beast-part-card"
+                    >
+                      <h3>{p.nome}</h3>
+                      <div className="beast-part-durability">
+                        <p>
+                          <span>Durabilidade</span>
+                          <strong>
+                            {p.durabilidade_atual} / {p.durabilidade_max}
+                          </strong>
+                        </p>
+                        <div className="bestiary-vigor" aria-hidden="true">
+                          <i
+                            style={{
+                              width: `${percentual(p.durabilidade_atual, p.durabilidade_max)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {p.alcance && (
+                        <p className="beast-part-range">
+                          <strong>Alcance</strong> · {p.alcance}
+                        </p>
+                      )}
+                      <div className="beast-part-technique">
+                        <h4>Técnica · {p.tecnica.nome}</h4>
+                        <p>{p.tecnica.descricao}</p>
+                      </div>
+                      {p.se_quebrado && (
+                        <div className="beast-part-broken">
+                          <h4>Se quebrada</h4>
+                          <p>{p.se_quebrado}</p>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </>
         ) : null}
       </section>

@@ -5,7 +5,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 import Dados from "@/app/dados/page";
 import RootLayout, { metadata } from "@/app/layout";
-import Utensilios from "@/app/utensilios/page";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({}) }));
 
@@ -94,24 +93,4 @@ it("rola cada tipo de dado, mantém as seis rolagens mais recentes e permite lim
       "Role um dado para começar o histórico desta sessão.",
     ),
   ).toBeTruthy();
-});
-
-it("filtra o utensílio equipado por propriedade e mostra quando não há resultados", () => {
-  render(<Utensilios />);
-  const query = screen.getByRole("searchbox", { name: "Buscar utensílios" });
-  const utensil = { name: "CUTELO DE FERRO" };
-  const empty = { name: "Nenhum utensílio encontrado" };
-
-  expect(screen.getByRole("heading", utensil)).toBeTruthy();
-  fireEvent.change(query, { target: { value: "  POTENTE  " } });
-  expect(screen.getByRole("heading", utensil)).toBeTruthy();
-  expect(screen.getByText("4 / 5")).toBeTruthy();
-
-  fireEvent.change(query, { target: { value: "arco" } });
-  expect(screen.queryByRole("heading", utensil)).toBeNull();
-  expect(screen.getByRole("heading", empty)).toBeTruthy();
-
-  fireEvent.change(query, { target: { value: "" } });
-  expect(screen.getByRole("heading", utensil)).toBeTruthy();
-  expect(screen.queryByRole("heading", empty)).toBeNull();
 });

@@ -17,7 +17,6 @@
 }
 
 .monster-image {
-  background-image: url("/assets/monsters.jpg");
   background-repeat: no-repeat;
   background-size: 200% 200%;
 }

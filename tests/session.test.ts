@@ -29,6 +29,7 @@ const sheet = {
   vigor_atual: 8,
 };
 const feral = { ...sheet, id: 3, usuario_id: 7 };
+const novaFicha = { ...sheet, utensilio_id: 6 };
 /** Captura requisições encaminhadas ao serviço externo sem acessar a rede. */
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -237,13 +238,13 @@ describe("POST /api/session", () => {
 
     await expectJson(
       await session.POST(
-        request("POST", { action: "create-feral", payload: sheet }),
+        request("POST", { action: "create-feral", payload: novaFicha }),
       ),
       201,
       feral,
     );
     expect(fetchMock).toHaveBeenCalledExactlyOnceWith(`${apiOrigin}/feral/`, {
-      body: JSON.stringify(sheet),
+      body: JSON.stringify(novaFicha),
       cache: "no-store",
       headers: { ...authorization, ...jsonHeaders },
       method: "POST",

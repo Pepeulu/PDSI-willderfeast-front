@@ -47,23 +47,11 @@ export interface Feral {
   conexao: string | null;
 }
 
-/** Campos editáveis enviados tanto na criação quanto na atualização de uma ficha. */
-export interface CreateFeralPayload {
-  nome: string;
-  titulo: string | null;
-  especialidade: string | null;
-  imagem_url: string | null;
-  vigor_max: number;
-  vigor_atual: number;
-  voce_e: string | null;
-  tenta_ser: string | null;
-  feras_familiares: string | null;
-  prato_tipico: string | null;
-  tempero_tipico: string | null;
-  infancia_criacao: string | null;
-  iniciacao_como_feral: string | null;
-  ambicao: string | null;
-  conexao: string | null;
+export type FeralPayload = Omit<Feral, "id" | "usuario_id">;
+export type CreateFeralPayload = FeralPayload & { utensilio_id: number };
+
+export interface FeralDetalhado extends Feral {
+  inventario?: { id: number; nome: string }[];
 }
 
 /** Registro do bestiário com categoria, vigor e informações sobre a criatura. */
@@ -77,7 +65,48 @@ export interface Monstro {
   alvos: string | null;
   dieta: string | null;
   habitat: string | null;
+  comportamento?: string | null;
+  imagem_url?: string | null;
 }
+
+export type Descricao = { id: number; nome: string; descricao: string | null };
+type Pontuacao = { nome: string; pontos: number | null };
+export interface MonstroDetalhado extends Monstro {
+  estilos?: Pontuacao[];
+  habilidades?: Pontuacao[];
+  tracos?: Descricao[];
+  partes?: {
+    id: number;
+    nome: string;
+    alcance: string | null;
+    durabilidade_atual: number;
+    durabilidade_max: number;
+    se_quebrado: string | null;
+    tecnica: Descricao;
+  }[];
+}
+
+export interface Utensilio {
+  id: number;
+  nome: string;
+  alcance: string | null;
+  durabilidade_max: number;
+  estilos_principais?: [string, string] | null;
+  imagem_url?: string | null;
+  tecnicas: Descricao[];
+}
+
+export interface ItemInventario {
+  id: number;
+  utensilio: Utensilio;
+  durabilidade_atual: number;
+  estilo_escolhido?: string | null;
+  se_quebrado: boolean | null;
+  tecnicas: Descricao[];
+}
+
+export type Grupo = "estilos" | "habilidades" | "tracos" | "condicoes";
+export type Atributos = Record<Grupo, (Descricao & { valor: number })[]>;
 
 /** Falha HTTP devolvida pela rota de sessão. */
 export class ApiError extends Error {
@@ -93,7 +122,7 @@ export class ApiError extends Error {
 }
 
 /** Solicita JSON sem cache e converte falhas HTTP em {@link ApiError}. */
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
+export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
     cache: "no-store",
@@ -118,6 +147,19 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   }
 
   return data as T;
+}
+
+/** Envia o arquivo à API autenticada e devolve a URL que será gravada na ficha. */
+export async function enviarImagemFeral(arquivo: File) {
+  if (arquivo.size > 4 * 1024 * 1024) {
+    throw new ApiError("A imagem deve ter no máximo 4 MB.", 413);
+  }
+  const { url } = await request<{ url: string }>("/api/jogo/imagens/feral", {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: arquivo,
+  });
+  return url;
 }
 
 /** Usa a mensagem da API em falhas HTTP e o texto fornecido nas demais falhas. */
@@ -159,11 +201,11 @@ export async function createFeral(payload: CreateFeralPayload) {
 
 /** Busca pelo ID uma ficha acessível pela sessão atual. */
 export async function getFeral(id: number) {
-  return request<Feral>(`/api/session?resource=feral&id=${id}`);
+  return request<FeralDetalhado>(`/api/session?resource=feral&id=${id}`);
 }
 
 /** Envia os campos editáveis da ficha e retorna a versão salva. */
-export async function updateFeral(id: number, payload: CreateFeralPayload) {
+export async function updateFeral(id: number, payload: FeralPayload) {
   return request<Feral>("/api/session", {
     body: JSON.stringify({ action: "update-feral", id, payload }),
     method: "PUT",
@@ -184,5 +226,5 @@ export async function getMonstros() {
 
 /** Busca os detalhes de uma criatura pelo ID. */
 export async function getMonstro(id: number) {
-  return request<Monstro>(`/api/session?resource=monstro&id=${id}`);
+  return request<MonstroDetalhado>(`/api/session?resource=monstro&id=${id}`);
 }

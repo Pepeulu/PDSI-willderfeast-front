@@ -3,6 +3,7 @@
  * @module
  */
 
+import imagensCloudinary from "@/lib/imagens-cloudinary.json";
 import Link from "next/link";
 
 /** Renderiza a miniatura e o link da besta identificada pelo índice. */
@@ -31,7 +32,10 @@ export default function MonsterCard({ index = 0 }: { index?: number }) {
         className="monster-image"
         role="img"
         aria-label={names[index % 6]}
-        style={{ backgroundPosition: positions[index % 6] }}
+        style={{
+          backgroundPosition: positions[index % 6],
+          backgroundImage: `url("${imagensCloudinary.interface.monsters}")`,
+        }}
       />
 
       <b>Besta {index + 1}</b>

@@ -4,25 +4,35 @@
  */
 "use client";
 
+import imagensCloudinary from "@/lib/imagens-cloudinary.json";
 import DashboardShell from "@/components/DashboardShell";
+import FotoFeralUpload from "@/components/FotoFeralUpload";
+import {
+  feralAtivoId,
+  limparSessaoLocal,
+  salvarFeralAtivo,
+  urlImagemFeral,
+} from "@/lib/feral-ativo";
+import { EscolhaUtensilio } from "@/components/UtensilioPreview";
+import { GameError, useCatalogoUtensilios } from "@/components/GameData";
 import {
   ApiError,
   createFeral,
   deleteFeral,
-  Feral,
+  enviarImagemFeral,
+  type FeralDetalhado,
   getApiErrorMessage,
   getFeral,
 } from "@/lib/api";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 /** Valores editáveis da nova ficha antes da conversão para o formato da API. */
 type FeralForm = {
   nome: string;
   titulo: string;
   especialidade: string;
-  imagemUrl: string;
   vigorMaximo: string;
   vigorAtual: string;
   voceE: string;
@@ -42,7 +52,6 @@ type TextFieldConfig = {
   label: string;
   maxLength?: number;
   placeholder: string;
-  type?: "text" | "url";
   wide?: boolean;
 };
 
@@ -51,7 +60,6 @@ const initialForm: FeralForm = {
   nome: "",
   titulo: "",
   especialidade: "",
-  imagemUrl: "",
   vigorMaximo: "10",
   vigorAtual: "10",
   voceE: "",
@@ -84,13 +92,6 @@ const identityFields: TextFieldConfig[] = [
     label: "Especialidade",
     maxLength: 100,
     placeholder: "Ex.: Cozinha de campo",
-  },
-  {
-    field: "imagemUrl",
-    label: "URL da imagem",
-    maxLength: 255,
-    placeholder: "https://exemplo.com/feral.jpg",
-    type: "url",
   },
 ];
 
@@ -170,7 +171,9 @@ function SectionHeading({
     <div className="feral-form-section-heading">
       <span>{number}</span>
       <div>
-        <h2>{title}</h2>
+        <h2 id={`feral-etapa-${number}`} tabIndex={-1}>
+          {title}
+        </h2>
         <p>{description}</p>
       </div>
     </div>
@@ -181,8 +184,25 @@ function SectionHeading({
 function CreateCharacterSheet() {
   const router = useRouter();
   const [form, setForm] = useState<FeralForm>(initialForm);
+  const [foto, setFoto] = useState<File | null>(null);
+  const [imagemEnviada, setImagemEnviada] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [utensilioId, setUtensilioId] = useState("");
+  const [etapa, setEtapa] = useState(1);
+  const formRef = useRef<HTMLFormElement>(null);
+  const {
+    data: catalogo,
+    error: erroCatalogo,
+    retry,
+  } = useCatalogoUtensilios();
+  const opcoes = catalogo ?? [];
+
+  useEffect(() => {
+    formRef.current
+      ?.querySelector<HTMLElement>(`#feral-etapa-0${etapa}`)
+      ?.focus();
+  }, [etapa]);
 
   /** Copia o formulário com o novo valor do campo editado. */
   function updateField(field: keyof FeralForm, value: string) {
@@ -198,12 +218,11 @@ function CreateCharacterSheet() {
       >
         <span>{config.label}</span>
         <input
-          autoFocus={config.field === "nome"}
           maxLength={config.maxLength}
           onChange={(event) => updateField(config.field, event.target.value)}
           placeholder={config.placeholder}
           required={config.field === "nome"}
-          type={config.type ?? "text"}
+          type="text"
           value={form[config.field]}
         />
       </label>
@@ -220,10 +239,23 @@ function CreateCharacterSheet() {
 
     if (!form.nome.trim()) {
       setError("Informe o nome do Feral.");
+      setEtapa(1);
+      return;
+    }
+
+    if (!opcoes.some((utensilio) => String(utensilio.id) === utensilioId)) {
+      setError("Selecione o utensílio inicial do Feral.");
+      setEtapa(1);
+      return;
+    }
+
+    if (etapa === 1) {
+      setEtapa(2);
       return;
     }
 
     if (
+      !form.vigorAtual.trim() ||
       !Number.isInteger(vigorMaximo) ||
       !Number.isInteger(vigorAtual) ||
       vigorMaximo < 1 ||
@@ -233,17 +265,29 @@ function CreateCharacterSheet() {
       setError(
         "Informe valores inteiros de vigor. O vigor atual não pode superar o vigor máximo.",
       );
+      setEtapa(2);
+      return;
+    }
+
+    if (etapa === 2) {
+      setEtapa(3);
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await createFeral({
+      let imagemUrl = imagemEnviada;
+      if (foto && !imagemUrl) {
+        imagemUrl = await enviarImagemFeral(foto);
+        setImagemEnviada(imagemUrl);
+      }
+      const criado = await createFeral({
+        utensilio_id: Number(utensilioId),
         ambicao: optionalValue(form.ambicao),
         conexao: optionalValue(form.conexao),
         especialidade: optionalValue(form.especialidade),
         feras_familiares: optionalValue(form.ferasFamiliares),
-        imagem_url: optionalValue(form.imagemUrl),
+        imagem_url: imagemUrl,
         infancia_criacao: optionalValue(form.infanciaCriacao),
         iniciacao_como_feral: optionalValue(form.iniciacaoComoFeral),
         nome: form.nome.trim(),
@@ -256,11 +300,12 @@ function CreateCharacterSheet() {
         voce_e: optionalValue(form.voceE),
       });
 
+      if (criado?.id && !feralAtivoId()) salvarFeralAtivo(criado);
       router.push("/fichas");
       router.refresh();
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) {
-        localStorage.removeItem("wilderfeast_user");
+        limparSessaoLocal();
         router.replace("/login?next=/fichas/novo");
         return;
       }
@@ -293,8 +338,14 @@ function CreateCharacterSheet() {
           </span>
         </header>
 
-        <form className="feral-create-form" noValidate onSubmit={submit}>
-          <section className="feral-form-section">
+        <form
+          className="feral-create-form"
+          noValidate
+          onSubmit={submit}
+          ref={formRef}
+        >
+          <p className="feral-step-progress">Etapa {etapa} de 3</p>
+          <section className="feral-form-section" hidden={etapa !== 1}>
             <SectionHeading
               description="As informações principais exibidas no card da ficha."
               number="01"
@@ -302,10 +353,48 @@ function CreateCharacterSheet() {
             />
             <div className="feral-form-grid">
               {identityFields.map(renderTextField)}
+              <FotoFeralUpload
+                arquivo={foto}
+                onChange={(arquivo) => {
+                  setFoto(arquivo);
+                  setImagemEnviada(null);
+                }}
+                disabled={isSubmitting}
+              />
+              {opcoes.length > 0 && (
+                <EscolhaUtensilio
+                  catalogo={opcoes}
+                  escolha={utensilioId}
+                  onChange={setUtensilioId}
+                  disabled={isSubmitting}
+                />
+              )}
+              {!catalogo?.length && (
+                <div className="feral-field-wide">
+                  {erroCatalogo ? (
+                    <GameError error={erroCatalogo} />
+                  ) : (
+                    <p role="status">
+                      {catalogo
+                        ? "Nenhum utensílio inicial disponível."
+                        : "Carregando utensílios…"}
+                    </p>
+                  )}
+                  {erroCatalogo || catalogo ? (
+                    <button
+                      type="button"
+                      className="feral-cancel-button"
+                      onClick={retry}
+                    >
+                      Recarregar catálogo
+                    </button>
+                  ) : null}
+                </div>
+              )}
             </div>
           </section>
 
-          <section className="feral-form-section">
+          <section className="feral-form-section" hidden={etapa !== 2}>
             <SectionHeading
               description="Vigor, natureza e referências culinárias."
               number="02"
@@ -342,7 +431,7 @@ function CreateCharacterSheet() {
             </div>
           </section>
 
-          <section className="feral-form-section">
+          <section className="feral-form-section" hidden={etapa !== 3}>
             <SectionHeading
               description="Os acontecimentos que moldaram o personagem."
               number="03"
@@ -379,15 +468,33 @@ function CreateCharacterSheet() {
           )}
 
           <div className="feral-form-actions">
-            <Link className="feral-cancel-button" href="/fichas">
-              Cancelar
-            </Link>
+            {etapa === 1 ? (
+              <Link className="feral-cancel-button" href="/fichas">
+                Cancelar
+              </Link>
+            ) : (
+              <button
+                className="feral-cancel-button"
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  setError("");
+                  setEtapa(etapa - 1);
+                }}
+              >
+                Voltar
+              </button>
+            )}
             <button
               className="feral-submit-button"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (etapa === 1 && !catalogo?.length)}
               type="submit"
             >
-              {isSubmitting ? "SALVANDO..." : "CRIAR FICHA"}
+              {isSubmitting
+                ? "SALVANDO..."
+                : etapa === 3
+                  ? "CRIAR FICHA"
+                  : "Avançar"}
             </button>
           </div>
         </form>
@@ -409,7 +516,7 @@ function SheetField({ label, value }: { label: string; value: string | null }) {
 /** Consulta uma ficha existente e oferece ações para editá-la ou excluí-la. */
 function CharacterSheetDetail({ id }: { id: number }) {
   const router = useRouter();
-  const [feral, setFeral] = useState<Feral | null>(null);
+  const [feral, setFeral] = useState<FeralDetalhado | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -423,7 +530,7 @@ function CharacterSheetDetail({ id }: { id: number }) {
       })
       .catch((requestError) => {
         if (requestError instanceof ApiError && requestError.status === 401) {
-          localStorage.removeItem("wilderfeast_user");
+          limparSessaoLocal();
           router.replace(`/login?next=/fichas/${id}`);
           return;
         }
@@ -457,6 +564,7 @@ function CharacterSheetDetail({ id }: { id: number }) {
     try {
       setDeleting(true);
       await deleteFeral(feral.id);
+      if (feralAtivoId() === feral.id) salvarFeralAtivo(null);
       router.replace("/fichas");
       router.refresh();
     } catch (requestError) {
@@ -495,7 +603,10 @@ function CharacterSheetDetail({ id }: { id: number }) {
               <div className="api-sheet-photo">
                 <img
                   alt={`Retrato de ${feral.nome}`}
-                  src={feral.imagem_url || "/assets/wilders.jpg"}
+                  src={
+                    urlImagemFeral(feral.imagem_url) ||
+                    imagensCloudinary.interface.wilders
+                  }
                 />
               </div>
               <div className="api-sheet-identity">
@@ -509,6 +620,9 @@ function CharacterSheetDetail({ id }: { id: number }) {
                   <span>
                     VIGOR {feral.vigor_atual} / {feral.vigor_max}
                   </span>
+                  {feral.inventario?.map((item) => (
+                    <span key={item.id}>Utensílio · {item.nome}</span>
+                  ))}
                 </div>
                 <div className="api-sheet-vigor">
                   <i
@@ -525,6 +639,8 @@ function CharacterSheetDetail({ id }: { id: number }) {
                 </div>
                 <div className="api-sheet-actions">
                   <Link href={`/perfil?feral=${feral.id}`}>EDITAR PERFIL</Link>
+                  <Link href={`/fichas/${feral.id}/atributos`}>ATRIBUTOS</Link>
+                  <Link href={`/utensilios?feral=${feral.id}`}>INVENTÁRIO</Link>
                   <button
                     disabled={deleting}
                     onClick={removeSheet}

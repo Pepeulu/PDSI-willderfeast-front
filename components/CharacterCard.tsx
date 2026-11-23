@@ -6,9 +6,11 @@
 import Link from "next/link";
 
 /** Apresenta os atributos de exemplo e aceita a personalização do nome e da imagem. */
+import imagensCloudinary from "@/lib/imagens-cloudinary.json";
+
 export default function CharacterCard({
   name = "Gata Samurai",
-  image = "/assets/cleaver.png",
+  image = imagensCloudinary.utensilios.cutelo,
 }: {
   name?: string;
   image?: string;

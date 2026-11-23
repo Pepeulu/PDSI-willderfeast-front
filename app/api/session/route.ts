@@ -3,9 +3,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-/** URL base da API externa, configurável pela variável `NEXT_PUBLIC_API_URL`. */
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://poas-wilderfeast.onrender.com";
+import type { FeralPayload, CreateFeralPayload } from "@/lib/api";
+import { API_URL } from "@/lib/api-origin";
 
 /** Credenciais recebidas no formato JSON da aplicação. */
 type LoginPayload = {
@@ -20,31 +19,12 @@ type RegisterPayload = {
   senha: string;
 };
 
-/** Campos editáveis que a API aceita na criação e na atualização de fichas. */
-type CreateFeralPayload = {
-  nome: string;
-  titulo: string | null;
-  especialidade: string | null;
-  imagem_url: string | null;
-  vigor_max: number;
-  vigor_atual: number;
-  voce_e: string | null;
-  tenta_ser: string | null;
-  feras_familiares: string | null;
-  prato_tipico: string | null;
-  tempero_tipico: string | null;
-  infancia_criacao: string | null;
-  iniciacao_como_feral: string | null;
-  ambicao: string | null;
-  conexao: string | null;
-};
-
 /** Formatos de corpo reconhecidos pelos métodos POST e PUT da rota. */
 type SessionBody =
   | { action: "login"; payload: LoginPayload }
   | { action: "register"; payload: RegisterPayload }
   | { action: "create-feral"; payload: CreateFeralPayload }
-  | { action: "update-feral"; id: number; payload: CreateFeralPayload }
+  | { action: "update-feral"; id: number; payload: FeralPayload }
   | { token: string };
 
 /** Extrai o JSON da API externa e padroniza o texto das respostas de erro. */

@@ -10,6 +10,7 @@ import {
   ApiError,
   createFeral,
   deleteFeral,
+  enviarImagemFeral,
   getApiErrorMessage,
   getFeral,
   getMonstro,
@@ -18,16 +19,39 @@ import {
   login,
   register,
   updateFeral,
-  type CreateFeralPayload,
+  type FeralPayload,
 } from "../lib/api";
 
 /** Substitui a rede e registra as requisições emitidas pelo cliente. */
 const fetchMock = vi.fn<typeof fetch>();
 
+it("só envia arquivos de até 4 MB e devolve a URL hospedada", async () => {
+  const arquivo = new File(["foto"], "feral.png", { type: "image/png" });
+  fetchMock.mockResolvedValueOnce(
+    Response.json({ url: "https://imagem.test/feral.png" }),
+  );
+  await expect(enviarImagemFeral(arquivo)).resolves.toBe(
+    "https://imagem.test/feral.png",
+  );
+  await expect(
+    enviarImagemFeral(
+      new File([new Uint8Array(4 * 1024 * 1024 + 1)], "grande.png"),
+    ),
+  ).rejects.toMatchObject({ status: 413 });
+  expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+    "/api/jogo/imagens/feral",
+    expect.objectContaining({
+      method: "POST",
+      body: arquivo,
+      headers: { "Content-Type": "application/octet-stream" },
+    }),
+  );
+});
+
 /** Dados fictícios para autenticação, fichas e registros do bestiário. */
 const credentials = { email: "feral@example.test", senha: "senha-de-teste" };
 const registration = { ...credentials, nome: "Nina" };
-const sheet: CreateFeralPayload = {
+const sheet: FeralPayload = {
   nome: "Nina",
   titulo: null,
   especialidade: "Caça",
@@ -80,9 +104,9 @@ describe("cliente da API", () => {
     },
     {
       name: "criar uma ficha",
-      run: () => createFeral(sheet),
+      run: () => createFeral({ ...sheet, utensilio_id: 9 }),
       method: "POST",
-      body: { action: "create-feral", payload: sheet },
+      body: { action: "create-feral", payload: { ...sheet, utensilio_id: 9 } },
       result: feral,
     },
     {

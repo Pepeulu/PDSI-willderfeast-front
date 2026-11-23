@@ -7,6 +7,7 @@ if (typeof document !== "undefined") {
   afterEach(() => {
     cleanup();
     localStorage.clear();
+    document.cookie = "wilderfeast_sidebar_identity=; Max-Age=0; Path=/";
   });
 }
 

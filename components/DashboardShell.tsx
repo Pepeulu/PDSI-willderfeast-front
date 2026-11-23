@@ -6,8 +6,11 @@
  */
 
 import Link from "next/link";
+import SidebarIdentity from "@/components/SidebarIdentity";
+import { limparSessaoLocal } from "@/lib/feral-ativo";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useSidebar } from "@/lib/useSidebar";
 
 /** Seções que podem ser destacadas no menu lateral. */
 export type DashboardSection =
@@ -20,10 +23,6 @@ type DashboardShellProps = {
   contentClassName?: string;
   dashboardClassName?: string;
 };
-
-/** Ilustração exibida ao lado do nome do usuário no painel. */
-const profileAvatar =
-  "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Qiyana_0.jpg";
 
 /** Renderiza o ícone decorativo da seção ou da ação de sair. */
 function NavigationIcon({ name }: { name: DashboardSection | "sair" }) {
@@ -125,47 +124,19 @@ export default function DashboardShell({
   dashboardClassName = "",
 }: DashboardShellProps) {
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
-  const [userName, setUserName] = useState("FERAL");
-
-  // Restaura as preferências e a identidade salvas no navegador após a montagem.
-  useEffect(() => {
-    setCollapsed(
-      localStorage.getItem("wilderfeast_sidebar_collapsed") === "true",
-    );
-
-    const savedUser = localStorage.getItem("wilderfeast_user");
-    if (!savedUser) return;
-
-    try {
-      const user = JSON.parse(savedUser) as { email?: string; nome?: string };
-      const name = user.nome?.trim() || user.email?.split("@")[0];
-      if (name) setUserName(name.toLocaleUpperCase("pt-BR"));
-    } catch {
-      localStorage.removeItem("wilderfeast_user");
-    }
-  }, []);
-
-  /** Alterna o menu lateral e grava a preferência para a próxima visita. */
-  function toggleSidebar() {
-    const next = !collapsed;
-    localStorage.setItem("wilderfeast_sidebar_collapsed", String(next));
-    setCollapsed(next);
-  }
+  const { collapsed, sidebarClasses, toggleSidebar } = useSidebar();
 
   /** Encerra a sessão, apaga a identidade local e volta ao login. */
   async function logout() {
     await fetch("/api/session", { method: "DELETE" });
-    localStorage.removeItem("wilderfeast_user");
+    limparSessaoLocal();
     router.replace("/login");
     router.refresh();
   }
 
   return (
     <div
-      className={`home-dashboard ${dashboardClassName}${
-        collapsed ? " sidebar-collapsed" : ""
-      }`.trim()}
+      className={`home-dashboard${dashboardClassName ? ` ${dashboardClassName}` : ""}${sidebarClasses}`}
     >
       <aside className="home-sidebar">
         <button
@@ -174,16 +145,9 @@ export default function DashboardShell({
           className="sidebar-toggle"
           onClick={toggleSidebar}
           type="button"
-        >
-          <span aria-hidden="true">{collapsed ? "›" : "‹"}</span>
-        </button>
+        />
 
-        <div className="home-user">
-          <span className="home-avatar">
-            <img alt="Qiyana" src={profileAvatar} />
-          </span>
-          <strong>{userName}</strong>
-        </div>
+        <SidebarIdentity />
 
         <nav aria-label="Navegação principal" className="home-navigation">
           {navigation.map((item) => (

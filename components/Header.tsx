@@ -5,6 +5,8 @@
  * @module
  */
 
+import imagensCloudinary from "@/lib/imagens-cloudinary.json";
+import { limparSessaoLocal } from "@/lib/feral-ativo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -15,7 +17,7 @@ export default function Header() {
   /** Encerra a sessão, apaga a identidade local e volta ao login. */
   async function logout() {
     await fetch("/api/session", { method: "DELETE" });
-    localStorage.removeItem("wilderfeast_user");
+    limparSessaoLocal();
     router.replace("/login");
     router.refresh();
   }
@@ -24,7 +26,7 @@ export default function Header() {
     <header className="topbar">
       <Link className="brand" href="/">
         <img
-          src="/assets/title.png"
+          src={imagensCloudinary.interface.title}
           alt="Wilderfeast — Você é o que você come"
         />
       </Link>

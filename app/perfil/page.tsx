@@ -5,9 +5,17 @@
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
+import FotoFeralUpload from "@/components/FotoFeralUpload";
+import {
+  feralAtivoId,
+  limparSessaoLocal,
+  salvarFeralAtivo,
+  urlImagemFeral,
+} from "@/lib/feral-ativo";
 import {
   ApiError,
-  CreateFeralPayload,
+  enviarImagemFeral,
+  FeralPayload,
   Feral,
   getApiErrorMessage,
   getMyFerais,
@@ -87,10 +95,12 @@ export default function Perfil() {
   const [ferais, setFerais] = useState<Feral[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [draft, setDraft] = useState<FeralDraft>(emptyDraft);
+  const [foto, setFoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const imagem = urlImagemFeral(draft.imagemUrl);
 
   useEffect(() => {
     let active = true;
@@ -99,19 +109,25 @@ export default function Perfil() {
       .then((data) => {
         if (!active) return;
         setFerais(data);
-        if (!data.length) return;
+        if (!data.length) {
+          salvarFeralAtivo(null);
+          return;
+        }
 
         const requestedId = Number(
           new URLSearchParams(window.location.search).get("feral"),
         );
         const selected =
-          data.find((feral) => feral.id === requestedId) ?? data[0];
+          data.find((feral) => feral.id === requestedId) ??
+          data.find((feral) => feral.id === feralAtivoId()) ??
+          data[0];
         setSelectedId(selected.id);
         setDraft(draftFromFeral(selected));
+        salvarFeralAtivo(selected);
       })
       .catch((requestError) => {
         if (requestError instanceof ApiError && requestError.status === 401) {
-          localStorage.removeItem("wilderfeast_user");
+          limparSessaoLocal();
           router.replace("/login?next=/perfil");
           return;
         }
@@ -144,6 +160,8 @@ export default function Perfil() {
     if (!selected) return;
     setSelectedId(selected.id);
     setDraft(draftFromFeral(selected));
+    setFoto(null);
+    salvarFeralAtivo(selected);
     setError("");
     setMessage("");
   }
@@ -171,7 +189,7 @@ export default function Perfil() {
       return;
     }
 
-    const payload: CreateFeralPayload = {
+    const payload: FeralPayload = {
       ambicao: nullable(draft.ambicao),
       conexao: nullable(draft.conexao),
       especialidade: nullable(draft.especialidade),
@@ -191,15 +209,21 @@ export default function Perfil() {
 
     try {
       setSaving(true);
+      if (foto) {
+        payload.imagem_url = await enviarImagemFeral(foto);
+        update("imagemUrl", payload.imagem_url);
+        setFoto(null);
+      }
       const updated = await updateFeral(selectedId, payload);
       setFerais((current) =>
         current.map((feral) => (feral.id === updated.id ? updated : feral)),
       );
       setDraft(draftFromFeral(updated));
+      salvarFeralAtivo(updated);
       setMessage("Perfil atualizado com sucesso na API.");
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) {
-        localStorage.removeItem("wilderfeast_user");
+        limparSessaoLocal();
         router.replace(`/login?next=/perfil?feral=${selectedId}`);
         return;
       }
@@ -239,6 +263,7 @@ export default function Perfil() {
               <label>
                 <span>Feral ativo</span>
                 <select
+                  disabled={saving}
                   onChange={(event) => selectFeral(Number(event.target.value))}
                   value={selectedId ?? ""}
                 >
@@ -306,10 +331,10 @@ export default function Perfil() {
                 </label>
               </div>
               <div className="profile-image-panel">
-                {draft.imagemUrl ? (
+                {imagem ? (
                   <img
                     alt={`Imagem de ${draft.nome || "Feral"}`}
-                    src={draft.imagemUrl}
+                    src={imagem}
                   />
                 ) : (
                   <div>
@@ -320,6 +345,7 @@ export default function Perfil() {
                 <label>
                   <span>URL da imagem</span>
                   <input
+                    disabled={!!foto}
                     onChange={(event) =>
                       update("imagemUrl", event.target.value)
                     }
@@ -328,6 +354,11 @@ export default function Perfil() {
                     value={draft.imagemUrl}
                   />
                 </label>
+                <FotoFeralUpload
+                  arquivo={foto}
+                  onChange={setFoto}
+                  disabled={saving}
+                />
               </div>
             </div>
 

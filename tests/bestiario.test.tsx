@@ -3,6 +3,7 @@
  * @module
  */
 
+import imagensCloudinary from "@/lib/imagens-cloudinary.json";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -43,6 +44,7 @@ beforeEach(() => {
 
 describe("lista do bestiário", () => {
   it("mostra os registros, filtra por característica e exibe os campos ausentes", async () => {
+    const imagem = "https://res.cloudinary.com/exemplo/image/upload/carpa.jpg";
     const pending = deferred<Response>();
     fetchMock.mockReturnValueOnce(pending.promise);
     const { container } = render(<Bestiario />);
@@ -57,7 +59,7 @@ describe("lista do bestiário", () => {
     await act(async () => {
       pending.resolve(
         Response.json([
-          { ...monster, vigor_atual: 15 },
+          { ...monster, vigor_atual: 15, imagem_url: imagem },
           {
             ...monster,
             id: 8,
@@ -75,6 +77,11 @@ describe("lista do bestiário", () => {
     const carp = screen.getByRole("link", { name: /Carpa da Serra/ });
     const owl = screen.getByRole("link", { name: /Coruja da Mata/ });
     expect(carp.getAttribute("href")).toBe("/bestiario/7");
+    expect(
+      within(carp)
+        .getByRole("img", { name: /Carpa da Serra/ })
+        .getAttribute("src"),
+    ).toBe(imagem);
     expect(within(carp).getByText("REGISTRO #007")).toBeTruthy();
     expect(within(carp).getByText("VIGOR 15 / 10")).toBeTruthy();
     expect(carp.querySelector("i")?.style.width).toBe("100%");
@@ -156,6 +163,68 @@ describe("lista do bestiário", () => {
 });
 
 describe("ficha de uma fera", () => {
+  it("apresenta partes, técnicas, estilos, habilidades e traços da ficha detalhada", async () => {
+    const parte = {
+      id: 2,
+      nome: "Casco",
+      alcance: "Curto",
+      durabilidade_max: 8,
+      durabilidade_atual: 6,
+      se_quebrado: "Perde a proteção.",
+      tecnica: { id: 3, nome: "Defesa", descricao: "Protege a fera." },
+    };
+    fetchMock.mockResolvedValueOnce(
+      Response.json({
+        ...monster,
+        nome: "Votra Enxame",
+        comportamento: "Defende o ninho.",
+        estilos: [{ nome: "Preciso", pontos: 2 }],
+        habilidades: [{ nome: "Escutar", pontos: null }],
+        tracos: [{ id: 4, nome: "Blindagem", descricao: "Resiste." }],
+        partes: [
+          parte,
+          {
+            ...parte,
+            id: 5,
+            nome: "Pata",
+            alcance: null,
+            se_quebrado: null,
+            durabilidade_atual: 0,
+            durabilidade_max: 0,
+          },
+        ],
+      }),
+    );
+    render(<BeastSheet />);
+    await screen.findByText("Defende o ninho.");
+    expect(
+      screen
+        .getByRole("img", { name: "Ilustração de Votra Enxame" })
+        .getAttribute("src"),
+    ).toBe(imagensCloudinary.bestiario["votra.jpg"]);
+    expect(
+      within(screen.getByText("Preciso").parentElement!).getByText("2"),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByText("Escutar").parentElement!).getByText("0"),
+    ).toBeTruthy();
+    expect(screen.getByText("Blindagem")).toBeTruthy();
+    const casco = screen.getByText("Perde a proteção.").closest("article")!;
+    expect(
+      within(casco).getByRole("heading", { name: "Se quebrada" }),
+    ).toBeTruthy();
+    expect(within(casco).getByText(/Curto/)).toBeTruthy();
+    expect(within(casco).getByText("6 / 8")).toBeTruthy();
+    expect(
+      casco.querySelector<HTMLElement>(".bestiary-vigor i")?.style.width,
+    ).toBe("75%");
+    const pata = screen
+      .getByRole("heading", { name: "Pata" })
+      .closest("article")!;
+    expect(
+      pata.querySelector<HTMLElement>(".bestiary-vigor i")?.style.width,
+    ).toBe("0%");
+  });
   it("carrega o registro e mostra os dados disponíveis", async () => {
     const pending = deferred<Response>();
     fetchMock.mockReturnValueOnce(pending.promise);

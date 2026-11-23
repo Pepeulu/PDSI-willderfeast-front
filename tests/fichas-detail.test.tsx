@@ -3,6 +3,7 @@
  * @module
  */
 
+import imagensCloudinary from "@/lib/imagens-cloudinary.json";
 import {
   act,
   fireEvent,
@@ -13,11 +14,14 @@ import {
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Sheet from "@/app/fichas/[id]/page";
+import { feralAtivoId, salvarFeralAtivo } from "@/lib/feral-ativo";
 import {
   ApiError,
   createFeral,
   deleteFeral,
+  enviarImagemFeral,
   getFeral,
+  request,
   type Feral,
 } from "@/lib/api";
 
@@ -40,7 +44,9 @@ vi.mock("@/lib/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api")>()),
   createFeral: vi.fn(),
   deleteFeral: vi.fn(),
+  enviarImagemFeral: vi.fn(),
   getFeral: vi.fn(),
+  request: vi.fn(),
 }));
 
 /** Ficha de referência com imagem e campos opcionais ausentes. */
@@ -69,23 +75,143 @@ function changeField(label: string, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 }
 
+function avancar() {
+  fireEvent.click(screen.getByRole("button", { name: "Avançar" }));
+}
+
 /** Abre a rota de criação e confirma que o formulário está visível. */
-function createSheet() {
+async function createSheet() {
   navigation.id = "novo";
   render(<Sheet />);
-  expect(screen.getByRole("heading", { name: "Criar ficha" })).toBeTruthy();
+  await screen.findByRole("radio", { name: "Espeto" });
 }
 
 beforeEach(() => {
   navigation.id = "7";
   vi.resetAllMocks();
+  vi.mocked(request).mockResolvedValue([
+    {
+      id: 9,
+      nome: "Cutelo",
+      alcance: "1 (Golpear)",
+      durabilidade_max: 20,
+      tecnicas: [],
+    },
+    {
+      id: 15,
+      nome: "Espeto",
+      alcance: "1 (Golpear)",
+      durabilidade_max: 20,
+      tecnicas: [],
+    },
+  ]);
 });
 
 describe("criação de ficha", () => {
-  it("exige um nome que não seja composto apenas de espaços", () => {
-    createSheet();
-    changeField("Nome do Feral *", "   ");
+  it("envia o arquivo só na última etapa e reaproveita a URL se salvar a ficha falhar", async () => {
+    const url = "https://imagem.test/feral.png";
+    vi.mocked(enviarImagemFeral).mockResolvedValueOnce(url);
+    vi.mocked(createFeral)
+      .mockRejectedValueOnce(new ApiError("Tente salvar novamente", 503))
+      .mockResolvedValueOnce(feral);
+    await createSheet();
+    const input = screen.getByLabelText("Imagem");
+    expect(screen.queryByLabelText("URL da imagem")).toBeNull();
+    const arquivo = new File(["foto"], "retrato.png", { type: "image/png" });
+    fireEvent.change(input, { target: { files: null } });
+    fireEvent.change(input, { target: { files: [] } });
+    fireEvent.change(input, { target: { files: [arquivo] } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Remover foto selecionada" }),
+    );
+    fireEvent.change(input, { target: { files: [arquivo] } });
+    changeField("Nome do Feral *", "Lia");
+    fireEvent.click(screen.getByRole("radio", { name: "Espeto" }));
+    avancar();
+    avancar();
+    expect(enviarImagemFeral).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "CRIAR FICHA" }));
+    await screen.findByText("Tente salvar novamente");
+    fireEvent.click(screen.getByRole("button", { name: "CRIAR FICHA" }));
+    await waitFor(() =>
+      expect(navigation.router.push).toHaveBeenCalledWith("/fichas"),
+    );
+    expect(enviarImagemFeral).toHaveBeenCalledExactlyOnceWith(arquivo);
+    expect(createFeral).toHaveBeenLastCalledWith(
+      expect.objectContaining({ imagem_url: url }),
+    );
+  });
+  it("atualiza as opções ao voltar ao formulário e salva o ID do novo cadastro", async () => {
+    await createSheet();
+    changeField("Nome do Feral *", "Lia");
+    fireEvent.click(screen.getByRole("radio", { name: "Espeto" }));
+    vi.mocked(request).mockResolvedValueOnce([
+      {
+        id: 93,
+        nome: "Concha",
+        alcance: null,
+        durabilidade_max: 14,
+        tecnicas: [],
+      },
+    ]);
+    fireEvent(window, new Event("focus"));
+    const nova = await screen.findByRole("radio", { name: "Concha" });
+    expect(screen.queryByRole("radio", { name: "Espeto" })).toBeNull();
+    avancar();
+    expect(createFeral).not.toHaveBeenCalled();
+    fireEvent.click(nova);
+    avancar();
+    avancar();
+    fireEvent.click(screen.getByRole("button", { name: "CRIAR FICHA" }));
+    expect(createFeral).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ nome: "Lia", utensilio_id: 93 }),
+    );
+  });
+  it("exige que o jogador escolha o utensílio e lista as opções da API", async () => {
+    await createSheet();
+    expect(request).toHaveBeenCalledWith("/api/jogo/utensilio");
+    expect(screen.queryByRole("radio", { checked: true })).toBeNull();
+    const cutelo = screen.getByRole("radio", { name: "Cutelo" });
+    const espeto = screen.getByRole("radio", { name: "Espeto" });
+    fireEvent.mouseEnter(cutelo.closest("label")!);
+    expect(screen.queryByRole("region")).toBeNull();
+    expect(screen.queryByRole("radio", { checked: true })).toBeNull();
+    fireEvent.focus(espeto);
+    expect(screen.queryByRole("region")).toBeNull();
+    changeField("Nome do Feral *", "Askell");
+    avancar();
+    expect(
+      await screen.findByText("Selecione o utensílio inicial do Feral."),
+    ).toBeTruthy();
+    expect(createFeral).not.toHaveBeenCalled();
+  });
+
+  it("mantém o rascunho durante uma falha ou catálogo vazio e permite recarregar", async () => {
+    vi.mocked(request)
+      .mockRejectedValueOnce(new ApiError("Catálogo indisponível", 503))
+      .mockResolvedValueOnce([]);
+    navigation.id = "novo";
+    render(<Sheet />);
+    expect(screen.getByText("Carregando utensílios…")).toBeTruthy();
+    changeField("Nome do Feral *", "Lia");
+    await screen.findByText("Catálogo indisponível");
+    fireEvent.click(screen.getByText("Recarregar catálogo"));
+    await screen.findByText("Nenhum utensílio inicial disponível.");
+    expect(
+      screen.getByRole<HTMLButtonElement>("button", { name: "Avançar" })
+        .disabled,
+    ).toBe(true);
+    fireEvent.click(screen.getByText("Recarregar catálogo"));
+    await screen.findByRole("radio", { name: "Espeto" });
+    expect(
+      screen.getByLabelText<HTMLInputElement>("Nome do Feral *").value,
+    ).toBe("Lia");
+  });
+
+  it("exige um nome que não seja composto apenas de espaços", async () => {
+    await createSheet();
+    changeField("Nome do Feral *", "   ");
+    avancar();
 
     expect(screen.getByRole("alert").textContent).toBe(
       "Informe o nome do Feral.",
@@ -94,17 +220,20 @@ describe("criação de ficha", () => {
   });
 
   it.each([
+    ["vigor atual vazio", "10", ""],
     ["máximo fracionário", "10.5", "5"],
     ["atual fracionário", "10", "5.5"],
     ["máximo abaixo de um", "0", "0"],
     ["atual negativo", "10", "-1"],
     ["atual acima do máximo", "10", "11"],
-  ])("rejeita vigor %s", (_scenario, max, current) => {
-    createSheet();
+  ])("rejeita vigor %s", async (_scenario, max, current) => {
+    await createSheet();
     changeField("Nome do Feral *", "Askell");
+    fireEvent.click(screen.getByRole("radio", { name: "Espeto" }));
+    avancar();
     changeField("Vigor máximo *", max);
     changeField("Vigor atual *", current);
-    fireEvent.click(screen.getByRole("button", { name: "CRIAR FICHA" }));
+    avancar();
 
     expect(screen.getByRole("alert").textContent).toBe(
       "Informe valores inteiros de vigor. O vigor atual não pode superar o vigor máximo.",
@@ -119,12 +248,29 @@ describe("criação de ficha", () => {
         finish = resolve;
       }),
     );
-    createSheet();
-    const fields = {
+    await createSheet();
+    fireEvent.click(screen.getByRole("radio", { name: "Espeto" }));
+    fireEvent.mouseEnter(
+      screen.getByRole("radio", { name: "Cutelo" }).closest("label")!,
+    );
+    expect(
+      screen.queryByRole("region", { name: "Prévia de Cutelo" }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("region", { name: "Prévia de Espeto" }),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("img", { name: "Ilustração de Espeto" })
+        .getAttribute("src"),
+    ).toBe(imagensCloudinary.utensilios.espeto);
+    expect(screen.getByText("20 / 20")).toBeTruthy();
+    const identidade = {
       "Nome do Feral *": "  Askell  ",
       Título: "  O Alquímico  ",
       Especialidade: "  Cozinha de campo  ",
-      "URL da imagem": "https://example.com/askell.jpg",
+    };
+    const perfil = {
       "Vigor máximo *": "12",
       "Vigor atual *": "0",
       "Você é": "  Um viajante  ",
@@ -132,18 +278,43 @@ describe("criação de ficha", () => {
       "Feras familiares": "  Lobos da serra  ",
       "Prato típico": "  Ensopado  ",
       "Tempero típico": "  Pimenta  ",
+    };
+    const historia = {
       "Infância e criação": "  Cresceu na mata  ",
       "Iniciação como Feral": "  Aprendeu com a família  ",
       Ambição: "  Explorar a serra  ",
       Conexão: "   ",
     };
-    for (const [label, value] of Object.entries(fields)) {
+    expect(
+      screen.queryByRole("heading", { name: "Perfil do Feral" }),
+    ).toBeNull();
+    for (const [label, value] of Object.entries(identidade))
       changeField(label, value);
-    }
-
-    expect(screen.getByLabelText("URL da imagem").getAttribute("type")).toBe(
-      "url",
+    avancar();
+    expect(screen.getByText("Etapa 2 de 3")).toBeTruthy();
+    for (const [label, value] of Object.entries(perfil))
+      changeField(label, value);
+    avancar();
+    expect(screen.getByText("Etapa 3 de 3")).toBeTruthy();
+    for (const [label, value] of Object.entries(historia))
+      changeField(label, value);
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(screen.getByLabelText<HTMLInputElement>("Vigor atual *").value).toBe(
+      "0",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(
+      screen.getByRole("radio", { name: "Espeto", checked: true }),
+    ).toBeTruthy();
+    expect(
+      screen.getByLabelText<HTMLInputElement>("Nome do Feral *").value,
+    ).toBe("  Askell  ");
+    avancar();
+    avancar();
+    expect(screen.getByLabelText<HTMLTextAreaElement>("Ambição").value).toBe(
+      "  Explorar a serra  ",
+    );
+    expect(createFeral).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "CRIAR FICHA" }));
 
     expect(
@@ -152,11 +323,12 @@ describe("criação de ficha", () => {
         .hasAttribute("disabled"),
     ).toBe(true);
     expect(createFeral).toHaveBeenCalledExactlyOnceWith({
+      utensilio_id: 15,
       ambicao: "Explorar a serra",
       conexao: null,
       especialidade: "Cozinha de campo",
       feras_familiares: "Lobos da serra",
-      imagem_url: "https://example.com/askell.jpg",
+      imagem_url: null,
       infancia_criacao: "Cresceu na mata",
       iniciacao_como_feral: "Aprendeu com a família",
       nome: "Askell",
@@ -179,8 +351,11 @@ describe("criação de ficha", () => {
     vi.mocked(createFeral).mockRejectedValue(
       new ApiError("Ficha duplicada", 409),
     );
-    createSheet();
+    await createSheet();
     changeField("Nome do Feral *", "Askell");
+    fireEvent.click(screen.getByRole("radio", { name: "Cutelo" }));
+    avancar();
+    avancar();
     fireEvent.click(screen.getByRole("button", { name: "CRIAR FICHA" }));
 
     expect((await screen.findByRole("alert")).textContent).toBe(
@@ -199,8 +374,11 @@ describe("criação de ficha", () => {
     vi.mocked(createFeral).mockRejectedValue(
       new ApiError("Sessão expirada", 401),
     );
-    createSheet();
+    await createSheet();
     changeField("Nome do Feral *", "Askell");
+    fireEvent.click(screen.getByRole("radio", { name: "Cutelo" }));
+    avancar();
+    avancar();
     fireEvent.click(screen.getByRole("button", { name: "CRIAR FICHA" }));
 
     await waitFor(() =>
@@ -215,7 +393,10 @@ describe("criação de ficha", () => {
 
 describe("detalhe de ficha", () => {
   it("mostra o carregamento e depois renderiza a ficha com os links correspondentes", async () => {
-    vi.mocked(getFeral).mockResolvedValue(feral);
+    vi.mocked(getFeral).mockResolvedValue({
+      ...feral,
+      inventario: [{ id: 11, nome: "Panela" }],
+    });
     render(<Sheet />);
 
     expect(screen.getByLabelText("Carregando ficha")).toBeTruthy();
@@ -225,6 +406,7 @@ describe("detalhe de ficha", () => {
     expect(getFeral).toHaveBeenCalledExactlyOnceWith(7);
     expect(screen.getByText("FICHA DO FERAL · #007")).toBeTruthy();
     expect(screen.getByText("VIGOR 5 / 10")).toBeTruthy();
+    expect(screen.getByText("Utensílio · Panela")).toBeTruthy();
     expect(
       screen
         .getByRole("img", { name: "Retrato de Askell" })
@@ -254,7 +436,7 @@ describe("detalhe de ficha", () => {
       screen
         .getByRole("img", { name: "Retrato de Askell" })
         .getAttribute("src"),
-    ).toBe("/assets/wilders.jpg");
+    ).toBe(imagensCloudinary.interface.wilders);
   });
 
   it("mostra a indisponibilidade da ficha quando a consulta falha", async () => {
@@ -319,41 +501,48 @@ describe("detalhe de ficha", () => {
     },
   );
 
-  it("só exclui com confirmação e volta para as fichas após a exclusão", async () => {
-    vi.mocked(getFeral).mockResolvedValue(feral);
-    let finish!: (data: { ok: true }) => void;
-    vi.mocked(deleteFeral).mockReturnValue(
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-    );
-    const confirm = vi
-      .spyOn(window, "confirm")
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
-    render(<Sheet />);
-    const button = await screen.findByRole("button", { name: "EXCLUIR FICHA" });
+  it.each([7, 8])(
+    "só exclui com confirmação e limpa a seleção se a ficha ativa é %s",
+    async (ativa) => {
+      salvarFeralAtivo({ id: ativa, nome: "Askell", imagem_url: null });
+      vi.mocked(getFeral).mockResolvedValue(feral);
+      let finish!: (data: { ok: true }) => void;
+      vi.mocked(deleteFeral).mockReturnValue(
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+      );
+      const confirm = vi
+        .spyOn(window, "confirm")
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
+      render(<Sheet />);
+      const button = await screen.findByRole("button", {
+        name: "EXCLUIR FICHA",
+      });
 
-    fireEvent.click(button);
-    expect(deleteFeral).not.toHaveBeenCalled();
-    fireEvent.click(button);
+      fireEvent.click(button);
+      expect(deleteFeral).not.toHaveBeenCalled();
+      fireEvent.click(button);
 
-    expect(confirm).toHaveBeenLastCalledWith(
-      "Excluir definitivamente a ficha de Askell?",
-    );
-    expect(deleteFeral).toHaveBeenCalledExactlyOnceWith(7);
-    expect(
-      screen
-        .getByRole("button", { name: "EXCLUINDO..." })
-        .hasAttribute("disabled"),
-    ).toBe(true);
+      expect(confirm).toHaveBeenLastCalledWith(
+        "Excluir definitivamente a ficha de Askell?",
+      );
+      expect(deleteFeral).toHaveBeenCalledExactlyOnceWith(7);
+      expect(
+        screen
+          .getByRole("button", { name: "EXCLUINDO..." })
+          .hasAttribute("disabled"),
+      ).toBe(true);
 
-    await act(async () => finish({ ok: true }));
-    expect(navigation.router.replace).toHaveBeenCalledExactlyOnceWith(
-      "/fichas",
-    );
-    expect(navigation.router.refresh).toHaveBeenCalledTimes(1);
-  });
+      await act(async () => finish({ ok: true }));
+      expect(feralAtivoId()).toBe(ativa === 7 ? 0 : 8);
+      expect(navigation.router.replace).toHaveBeenCalledExactlyOnceWith(
+        "/fichas",
+      );
+      expect(navigation.router.refresh).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it("preserva a ficha e reabilita o botão se a exclusão falhar", async () => {
     vi.mocked(getFeral).mockResolvedValue(feral);
